@@ -15,7 +15,7 @@ const SplashScreen = ({ navigation }) => {
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [navigation]);
 
   return (
     <>
@@ -64,7 +64,7 @@ const SplashScreen = ({ navigation }) => {
         <ActivityIndicator
           size="small"
           color="#C96A1B"
-          style={{ marginTop: 45 }}
+          style={styles.loader}
         />
 
         {/* Footer */}
@@ -187,6 +187,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
     color: '#999',
+  },
+  loader: {
+    marginTop: 45,
   },
 
 });

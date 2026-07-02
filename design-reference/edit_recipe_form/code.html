@@ -1,0 +1,277 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Edit Heritage Record</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&amp;family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#ffffff",
+                    "primary": "#000000",
+                    "secondary-fixed": "#ffdbcc",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#7a2f00",
+                    "primary-fixed": "#e5e2e1",
+                    "on-primary-container": "#858383",
+                    "background": "#fbf9f4",
+                    "on-secondary-container": "#652600",
+                    "on-tertiary-container": "#6782c6",
+                    "on-primary-fixed-variant": "#474746",
+                    "inverse-surface": "#30312e",
+                    "outline": "#747878",
+                    "surface-container": "#f0eee9",
+                    "surface-dim": "#dbdad5",
+                    "secondary-fixed-dim": "#ffb693",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#dae2ff",
+                    "surface-container-highest": "#e4e2dd",
+                    "on-tertiary-fixed": "#001946",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface-variant": "#444748",
+                    "on-secondary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "inverse-on-surface": "#f2f1ec",
+                    "on-tertiary-fixed-variant": "#264484",
+                    "on-error-container": "#93000a",
+                    "on-surface": "#1b1c19",
+                    "surface-bright": "#fbf9f4",
+                    "primary-fixed-dim": "#c8c6c5",
+                    "primary-container": "#1c1b1b",
+                    "surface": "#fbf9f4",
+                    "on-primary-fixed": "#1c1b1b",
+                    "surface-tint": "#5f5e5e",
+                    "surface-container-low": "#f5f3ee",
+                    "secondary": "#a04100",
+                    "on-secondary-fixed": "#351000",
+                    "tertiary-container": "#001946",
+                    "on-background": "#1b1c19",
+                    "inverse-primary": "#c8c6c5",
+                    "tertiary": "#000000",
+                    "surface-variant": "#e4e2dd",
+                    "outline-variant": "#c4c7c7",
+                    "tertiary-fixed-dim": "#b1c5ff",
+                    "surface-container-high": "#eae8e3",
+                    "secondary-container": "#fe7f3b",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "margin-mobile": "20px",
+                    "margin-desktop": "64px",
+                    "gutter-desktop": "32px",
+                    "gutter-mobile": "16px",
+                    "container-max": "1280px",
+                    "unit": "8px"
+            },
+            "fontFamily": {
+                    "headline-sm": [
+                            "Playfair Display"
+                    ],
+                    "body-md": [
+                            "Public Sans"
+                    ],
+                    "headline-md": [
+                            "Playfair Display"
+                    ],
+                    "display-lg": [
+                            "Playfair Display"
+                    ],
+                    "body-lg": [
+                            "Public Sans"
+                    ],
+                    "label-caps": [
+                            "Public Sans"
+                    ],
+                    "display-lg-mobile": [
+                            "Playfair Display"
+                    ]
+            },
+            "fontSize": {
+                    "headline-sm": [
+                            "24px",
+                            {
+                                    "lineHeight": "1.4",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-md": [
+                            "32px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-lg": [
+                            "64px",
+                            {
+                                    "lineHeight": "1.1",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "letterSpacing": "0.1em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "display-lg-mobile": [
+                            "40px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "fontWeight": "700"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Custom input styles for the parchment aesthetic */
+        .museum-input {
+            border: none;
+            border-bottom: 1px solid #747878; /* outline color */
+            background-color: transparent;
+            padding: 12px 0;
+            transition: border-color 0.2s ease;
+        }
+        .museum-input:focus {
+            outline: none;
+            border-bottom-color: #001946; /* tertiary-container as focus */
+            box-shadow: none;
+        }
+        
+        .parchment-texture {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md antialiased min-h-screen flex flex-col relative parchment-texture">
+<!-- Top App Bar (Intent: Editor/Transactional, but we include it per instruction as a base shell if it wasn't strictly transactional, but the prompt implies this is a linear "Edit" flow. We will include a simplified top bar for the "Cancel" action.) -->
+<header class="bg-surface border-b border-outline-variant flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16 z-50 sticky top-0">
+<button aria-label="Cancel and go back" class="text-on-surface-variant hover:text-secondary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+<span class="font-label-caps text-label-caps hidden md:inline">Cancel</span>
+</button>
+<div class="text-headline-sm font-headline-sm tracking-widest text-primary text-center absolute left-1/2 -translate-x-1/2">
+            Edit Heritage Record
+        </div>
+<div class="w-8 md:w-16"></div> <!-- Spacer for centering -->
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12 md:py-24 pb-32">
+<!-- Form Container: Glassmorphism / Premium Ivory Card -->
+<div class="bg-surface-container-lowest/80 backdrop-blur-md rounded-xl p-8 md:p-12 shadow-[0_8px_24px_rgba(0,0,0,0.04)] border border-[#E5E1D8] max-w-3xl mx-auto relative overflow-hidden">
+<!-- Subtle decorative corner -->
+<div class="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-bl-full pointer-events-none"></div>
+<div class="mb-10 text-center">
+<span class="font-label-caps text-label-caps text-secondary mb-2 block uppercase">Step 1: Recipe Identity</span>
+<h2 class="font-headline-md text-headline-md text-primary">Core Metadata</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2 max-w-lg mx-auto">Update the fundamental identifiers for this archival piece. Precision here ensures accurate cataloging.</p>
+</div>
+<form class="space-y-10">
+<!-- Group 1: Names -->
+<div class="space-y-8">
+<!-- Original Name Field -->
+<div class="relative group">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-1 uppercase tracking-widest transition-colors group-focus-within:text-tertiary-container" for="original_name">Original Nomenclature</label>
+<input class="museum-input w-full font-headline-sm text-headline-sm text-primary placeholder:text-outline-variant" id="original_name" name="original_name" placeholder="e.g., Shahi Nihari" type="text" value="Shahi Nihari">
+</div>
+<!-- English Translation Field -->
+<div class="relative group">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-1 uppercase tracking-widest transition-colors group-focus-within:text-tertiary-container" for="english_name">English Translation / Approximation</label>
+<input class="museum-input w-full font-body-lg text-body-lg text-primary placeholder:text-outline-variant" id="english_name" name="english_name" placeholder="e.g., Royal Slow-Cooked Stew" type="text" value="Royal Slow-Cooked Beef Stew">
+</div>
+</div>
+<!-- Group 2: Context / Description -->
+<div class="relative group pt-4">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-4 uppercase tracking-widest transition-colors group-focus-within:text-tertiary-container flex items-center justify-between" for="description">
+<span>Curatorial Description</span>
+<span class="material-symbols-outlined text-outline-variant text-sm" data-icon="history_edu">history_edu</span>
+</label>
+<textarea class="museum-input w-full font-body-md text-body-md text-primary resize-y min-h-[150px] leading-relaxed placeholder:text-outline-variant" id="description" name="description" placeholder="Provide historical context..." rows="6">A rich, slow-cooked stew originating from the royal kitchens of the Mughal Empire in Old Delhi. Traditionally simmered overnight for deep flavor, it features tender meat (usually beef or lamb) and a highly complex spice blend including long pepper (pipli) and star anise. Historically consumed as a heavy breakfast item by the working class for sustained energy, and later adopted by the nobility.</textarea>
+</div>
+<!-- Decorative Separator -->
+<div class="flex items-center justify-center space-x-4 py-4">
+<div class="h-px w-16 bg-outline-variant"></div>
+<span class="material-symbols-outlined text-secondary opacity-50" data-icon="restaurant_menu">restaurant_menu</span>
+<div class="h-px w-16 bg-outline-variant"></div>
+</div>
+<!-- Group 3: Metadata Tags (Example of Chips) -->
+<div>
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-4 uppercase tracking-widest">Archival Tags</label>
+<div class="flex flex-wrap gap-3">
+<span class="inline-flex items-center gap-1 bg-secondary-fixed text-on-secondary-fixed-variant font-label-caps text-label-caps px-4 py-2 rounded-xl">
+<span class="material-symbols-outlined text-sm" data-icon="star">star</span>
+                            Mughal Era
+                        </span>
+<span class="inline-flex items-center gap-1 bg-secondary-fixed text-on-secondary-fixed-variant font-label-caps text-label-caps px-4 py-2 rounded-xl">
+<span class="material-symbols-outlined text-sm" data-icon="local_fire_department">local_fire_department</span>
+                            Slow-Cooked
+                        </span>
+<span class="inline-flex items-center gap-1 bg-surface-container-high text-on-surface font-label-caps text-label-caps px-4 py-2 rounded-xl border border-outline-variant border-dashed cursor-pointer hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                            Add Tag
+                        </span>
+</div>
+</div>
+</form>
+</div>
+</main>
+<!-- Sticky Action Bar -->
+<div class="fixed bottom-0 left-0 w-full bg-surface-container/90 backdrop-blur-lg border-t border-outline-variant py-4 px-margin-mobile md:px-margin-desktop z-40 flex justify-between items-center shadow-[0_-4px_24px_rgba(0,0,0,0.05)]">
+<div class="hidden md:flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="info">info</span>
+<span class="font-body-md text-body-md text-sm">Last edited: 2 days ago</span>
+</div>
+<div class="flex gap-4 w-full md:w-auto justify-end">
+<button class="font-label-caps text-label-caps text-primary uppercase tracking-widest px-6 py-3 border-b-2 border-transparent hover:border-secondary transition-all" type="button">
+                Discard Changes
+            </button>
+<button class="font-label-caps text-label-caps uppercase tracking-widest bg-primary text-on-primary px-8 py-3 rounded-sm hover:bg-inverse-surface transition-colors flex items-center gap-2 shadow-sm" type="submit">
+<span class="material-symbols-outlined text-sm" data-icon="save">save</span>
+                Save Changes
+            </button>
+</div>
+</div>
+</body></html>

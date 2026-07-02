@@ -1,0 +1,195 @@
+<!DOCTYPE html><html class="h-full" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Authentication Successful - Culinary Heritage</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Public+Sans:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#1c1b1b",
+                        "surface-bright": "#fbf9f4",
+                        "on-surface-variant": "#444748",
+                        "background": "#fbf9f4",
+                        "primary": "#000000",
+                        "surface": "#fbf9f4",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#b1c5ff",
+                        "secondary-fixed": "#ffdbcc",
+                        "surface-container": "#f0eee9",
+                        "surface-container-low": "#f5f3ee",
+                        "on-tertiary-container": "#6782c6",
+                        "inverse-primary": "#c8c6c5",
+                        "primary-container": "#1c1b1b",
+                        "error-container": "#ffdad6",
+                        "on-background": "#1b1c19",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "secondary": "#a04100",
+                        "tertiary": "#000000",
+                        "tertiary-fixed": "#dae2ff",
+                        "secondary-fixed-dim": "#ffb693",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed": "#001946",
+                        "surface-tint": "#5f5e5e",
+                        "on-secondary-fixed": "#351000",
+                        "on-secondary-fixed-variant": "#7a2f00",
+                        "secondary-container": "#fe7f3b",
+                        "outline-variant": "#c4c7c7",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#001946",
+                        "surface-container-high": "#eae8e3",
+                        "on-surface": "#1b1c19",
+                        "outline": "#747878",
+                        "on-tertiary-fixed-variant": "#264484",
+                        "inverse-surface": "#30312e",
+                        "primary-fixed": "#e5e2e1",
+                        "on-primary-container": "#858383",
+                        "error": "#ba1a1a",
+                        "surface-dim": "#dbdad5",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#e4e2dd",
+                        "on-primary-fixed-variant": "#474746",
+                        "surface-container-highest": "#e4e2dd",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-secondary-container": "#652600"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-mobile": "20px",
+                        "gutter-mobile": "16px",
+                        "gutter-desktop": "32px",
+                        "unit": "8px",
+                        "container-max": "1280px",
+                        "margin-desktop": "64px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Public Sans"],
+                        "label-caps": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "headline-sm": ["Playfair Display"],
+                        "headline-md": ["Playfair Display"],
+                        "display-lg-mobile": ["Playfair Display"],
+                        "display-lg": ["Playfair Display"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "headline-md": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "display-lg": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .parchment-texture {
+            background-color: #fbf9f4; /* surface-bright */
+            background-image: 
+                radial-gradient(circle at 100% 150%, #eae8e3 24%, white 25%, white 28%, #eae8e3 29%, #eae8e3 36%, white 36%, white 40%, transparent 40%, transparent),
+                radial-gradient(circle at 0 150%, #eae8e3 24%, white 25%, white 28%, #eae8e3 29%, #eae8e3 36%, white 36%, white 40%, transparent 40%, transparent),
+                radial-gradient(circle at 50% 100%, white 10%, #eae8e3 11%, #eae8e3 23%, white 24%, white 30%, #eae8e3 31%, #eae8e3 43%, white 44%, white 50%, #eae8e3 51%, #eae8e3 63%, white 64%, white 71%, transparent 71%, transparent),
+                radial-gradient(circle at 100% 50%, white 5%, #eae8e3 6%, #eae8e3 15%, white 16%, white 20%, #eae8e3 21%, #eae8e3 30%, white 31%, white 35%, #eae8e3 36%, #eae8e3 45%, white 46%, white 49%, transparent 50%, transparent),
+                radial-gradient(circle at 0 50%, white 5%, #eae8e3 6%, #eae8e3 15%, white 16%, white 20%, #eae8e3 21%, #eae8e3 30%, white 31%, white 35%, #eae8e3 36%, #eae8e3 45%, white 46%, white 49%, transparent 50%, transparent);
+            background-size: 100px 50px;
+            opacity: 0.8;
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 1s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        
+        /* Copper medal glow effect */
+        .medal-glow {
+            position: relative;
+        }
+        .medal-glow::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150%;
+            height: 150%;
+            background: radial-gradient(circle, rgba(254, 127, 59, 0.2) 0%, rgba(251, 249, 244, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background h-full text-on-background antialiased relative overflow-hidden flex flex-col">
+<!-- Tactile Parchment Overlay -->
+<div class="parchment-texture"></div>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col items-center justify-center px-margin-mobile md:px-margin-desktop relative z-10">
+<!-- Center Container -->
+<div class="max-w-md w-full text-center flex flex-col items-center">
+<!-- Medal Icon -->
+<div class="medal-glow mb-12 fade-in-up delay-100">
+<div class="w-32 h-32 md:w-40 md:h-40 bg-surface-container rounded-full flex items-center justify-center border border-surface-variant shadow-[0_4px_24px_rgba(0,0,0,0.04)] relative overflow-hidden">
+<!-- Subtle inner gradient for copper feel -->
+<div class="absolute inset-0 bg-gradient-to-br from-secondary-container/20 to-transparent"></div>
+<span class="material-symbols-outlined text-[64px] md:text-[80px] text-secondary" style="font-variation-settings: 'FILL' 1;">
+                        workspace_premium
+                    </span>
+</div>
+</div>
+<!-- Typography Group -->
+<div class="space-y-6 mb-12">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary fade-in-up delay-200">
+                    Authentication Successful
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-sm mx-auto fade-in-up delay-300">
+                    You are now part of the national movement to preserve India's culinary DNA.
+                </p>
+</div>
+<!-- Action Area -->
+<div class="w-full fade-in-up delay-400">
+<button class="w-full sm:w-auto px-8 py-4 bg-primary text-on-primary rounded-DEFAULT font-label-caps text-label-caps uppercase tracking-widest hover:bg-surface-tint transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background">
+                    Proceed to Your Archive
+                </button>
+</div>
+</div>
+</main>
+<!-- Warm ambient lighting effect at bottom -->
+<div class="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-secondary-container/5 to-transparent z-0 pointer-events-none"></div>
+</body></html>

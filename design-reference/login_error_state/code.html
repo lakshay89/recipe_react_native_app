@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login Failed | Edible India</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Public+Sans:wght@300;400;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@100..900&family=Public+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#652600",
+                    "surface-variant": "#e4e2dd",
+                    "secondary-container": "#fe7f3b",
+                    "outline-variant": "#c4c7c7",
+                    "primary": "#000000",
+                    "on-primary": "#ffffff",
+                    "tertiary": "#000000",
+                    "surface-container-low": "#f5f3ee",
+                    "on-background": "#1b1c19",
+                    "surface-container": "#f0eee9",
+                    "on-surface-variant": "#444748",
+                    "on-secondary-fixed-variant": "#7a2f00",
+                    "on-error": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "background": "#fbf9f4",
+                    "surface-container-highest": "#e4e2dd",
+                    "surface-container-high": "#eae8e3",
+                    "on-primary-fixed-variant": "#474746",
+                    "on-primary-fixed": "#1c1b1b",
+                    "primary-fixed": "#e5e2e1",
+                    "tertiary-container": "#001946",
+                    "inverse-primary": "#c8c6c5",
+                    "inverse-on-surface": "#f2f1ec",
+                    "primary-fixed-dim": "#c8c6c5",
+                    "on-tertiary-fixed": "#001946",
+                    "error": "#ba1a1a",
+                    "on-tertiary": "#ffffff",
+                    "surface-bright": "#fbf9f4",
+                    "secondary-fixed-dim": "#ffb693",
+                    "secondary-fixed": "#ffdbcc",
+                    "on-secondary": "#ffffff",
+                    "secondary": "#a04100",
+                    "outline": "#747878",
+                    "on-tertiary-fixed-variant": "#264484",
+                    "on-secondary-fixed": "#351000",
+                    "on-error-container": "#93000a",
+                    "inverse-surface": "#30312e",
+                    "surface-dim": "#dbdad5",
+                    "surface": "#fbf9f4",
+                    "on-surface": "#1b1c19",
+                    "tertiary-fixed": "#dae2ff",
+                    "on-tertiary-container": "#6782c6",
+                    "tertiary-fixed-dim": "#b1c5ff",
+                    "surface-tint": "#5f5e5e",
+                    "primary-container": "#1c1b1b",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-container": "#858383"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter-mobile": "16px",
+                    "margin-desktop": "64px",
+                    "gutter-desktop": "32px",
+                    "unit": "8px",
+                    "margin-mobile": "20px",
+                    "container-max": "1280px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Public Sans"],
+                    "headline-md": ["Playfair Display"],
+                    "display-lg-mobile": ["Playfair Display"],
+                    "body-md": ["Public Sans"],
+                    "display-lg": ["Playfair Display"],
+                    "body-lg": ["Public Sans"],
+                    "headline-sm": ["Playfair Display"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                    "headline-md": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "display-lg-mobile": ["40px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "display-lg": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-sm": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .scrim-overlay {
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0) 100%);
+        }
+        .error-shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md overflow-x-hidden">
+<!-- TopAppBar Mapping -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 h-16 md:px-margin-desktop bg-background">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary cursor-pointer">menu</span>
+<h1 class="font-headline-sm text-headline-sm tracking-tight text-primary">Edible India</h1>
+</div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-primary cursor-pointer">account_circle</span>
+</div>
+</header>
+<main class="min-h-screen pt-16 flex flex-col md:flex-row">
+<!-- Hero Visual (Left Side Desktop) -->
+<div class="hidden md:block md:w-1/2 relative h-[calc(100vh-64px)] overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A moody, high-contrast photograph of ancient Indian stone spice grinders sitting on a dark wooden table. Soft morning light catches the textures of the stone and stray grains of turmeric and cardamom. The aesthetic is museum-like, professional, and deeply grounded in heritage, using a palette of deep earth tones and charcoal. The lighting is editorial and sophisticated." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAal3MT3fNHtkr67GoZMDViD00R3OAWaeoW5p0MtiBINpdzEDA4krIXbQaUB7Vbg1jTA4SDTTWrDc645jPNEzoOOdWn1QM8AOUV2HGUDIa-ZhimpZbmB_G1wnanyXiT3YxOrwQM2eQPJM6My6PW6LGofpWiBPiDyVOSsNh-ewyDYTusnrTeL9SnFTXxQkr0LnoYXa913VdVYPkquA-GiKkPgjkJrxe44pkKqdKXJYmB-vHMpHsuXPbYAwt_s81NCjAudkRtqULFNO64')">
+</div>
+<div class="absolute inset-0 scrim-overlay flex flex-col justify-end p-margin-desktop text-white">
+<span class="font-label-caps text-label-caps mb-4 text-secondary-container">THE GUARDIAN PORTAL</span>
+<h2 class="font-display-lg text-display-lg mb-6">Preserving the Culinary Soul</h2>
+<p class="font-body-lg text-body-lg max-w-md opacity-80">Access the deep archives of regional staples and lost recipes of the Indian subcontinent.</p>
+</div>
+</div>
+<!-- Login Container (Right Side Desktop) -->
+<div class="w-full md:w-1/2 flex flex-col items-center justify-center px-margin-mobile md:px-margin-desktop py-12">
+<div class="w-full max-w-md">
+<!-- Branding for Mobile -->
+<div class="md:hidden mb-12 text-center">
+<span class="font-label-caps text-label-caps text-secondary mb-2 block">SIGN IN</span>
+<h2 class="font-headline-md text-headline-md">Guardian Access</h2>
+</div>
+<div class="hidden md:block mb-12">
+<h2 class="font-headline-md text-headline-md">Welcome Back</h2>
+<p class="text-on-surface-variant font-body-md mt-2">Enter your credentials to manage the archive.</p>
+</div>
+<!-- Error Message Block -->
+<div class="error-shake mb-8 p-4 bg-error-container border-l-4 border-error flex items-start gap-4">
+<span class="material-symbols-outlined text-error mt-0.5">warning</span>
+<div>
+<h3 class="font-bold text-on-error-container text-body-md">Login Failed</h3>
+<p class="text-on-error-container opacity-90 text-sm mt-1">Invalid credentials. Please check your guardian ID and password.</p>
+</div>
+</div>
+<!-- Form -->
+<form class="space-y-8" onsubmit="event.preventDefault();">
+<div class="relative group">
+<label class="font-label-caps text-[10px] text-outline uppercase tracking-widest absolute -top-3 left-0 transition-all group-focus-within:text-primary">Guardian ID</label>
+<input class="w-full py-3 bg-transparent border-b border-error focus:border-primary outline-none text-body-md transition-colors placeholder:text-surface-variant" placeholder="Enter ID" type="text" value="G-7729-ARCH"/>
+<span class="absolute right-0 bottom-3 text-error material-symbols-outlined text-sm">error</span>
+</div>
+<div class="relative group">
+<label class="font-label-caps text-[10px] text-outline uppercase tracking-widest absolute -top-3 left-0 transition-all group-focus-within:text-primary">Secret Key</label>
+<input class="w-full py-3 bg-transparent border-b border-error focus:border-primary outline-none text-body-md transition-colors placeholder:text-surface-variant" placeholder="Enter password" type="password" value="••••••••"/>
+<span class="absolute right-0 bottom-3 text-error material-symbols-outlined text-sm">visibility_off</span>
+</div>
+<div class="flex items-center justify-between pt-2">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 rounded-sm border-outline text-primary focus:ring-primary" type="checkbox"/>
+<span class="text-sm font-body-md text-on-surface-variant group-hover:text-primary transition-colors">Keep me signed in</span>
+</label>
+<a class="text-sm font-body-md text-secondary border-b border-transparent hover:border-secondary transition-all" href="#">Forgot ID?</a>
+</div>
+<button class="w-full py-4 bg-primary text-white font-bold tracking-widest uppercase text-sm rounded-sm hover:opacity-90 active:scale-[0.98] transition-all shadow-sm">
+                        RETRY ACCESS
+                    </button>
+</form>
+<!-- Footer Context -->
+<div class="mt-12 pt-8 border-t border-surface-variant">
+<p class="text-center text-on-surface-variant text-sm font-body-md">
+                        New archivist? <a class="text-primary font-bold underline underline-offset-4 hover:text-secondary transition-colors" href="#">Apply for credentials</a>
+</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Suppressed Nav Shell for Focused Journey (Login) as per rules -->
+<!-- However, providing a footer for heritage aesthetic -->
+<footer class="py-8 bg-surface-container text-center md:hidden">
+<p class="font-label-caps text-label-caps opacity-50">EDIBLE INDIA DIGITAL MUSEUM © 2024</p>
+</footer>
+<script>
+        // Micro-interaction for input clearing/focus
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                // Remove error state classes on focus for a better UX
+                input.classList.remove('border-error');
+                input.classList.add('border-primary');
+            });
+        });
+    </script>
+</body></html>

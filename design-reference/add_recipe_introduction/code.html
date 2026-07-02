@@ -1,0 +1,169 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Add First Recipe - Culinary Heritage</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Public+Sans:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e4e2dd",
+                        "surface": "#fbf9f4",
+                        "on-tertiary-container": "#6782c6",
+                        "on-primary-fixed-variant": "#474746",
+                        "on-secondary-fixed": "#351000",
+                        "on-secondary-container": "#652600",
+                        "tertiary-fixed-dim": "#b1c5ff",
+                        "on-primary-fixed": "#1c1b1b",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#5f5e5e",
+                        "surface-container": "#f0eee9",
+                        "surface-container-high": "#eae8e3",
+                        "secondary": "#a04100",
+                        "on-secondary-fixed-variant": "#7a2f00",
+                        "on-primary-container": "#858383",
+                        "on-surface-variant": "#444748",
+                        "inverse-on-surface": "#f2f1ec",
+                        "secondary-container": "#fe7f3b",
+                        "tertiary-container": "#001946",
+                        "surface-variant": "#e4e2dd",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c4c7c7",
+                        "background": "#fbf9f4",
+                        "inverse-surface": "#30312e",
+                        "primary": "#000000",
+                        "surface-container-low": "#f5f3ee",
+                        "surface-bright": "#fbf9f4",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#ffb693",
+                        "on-tertiary-fixed-variant": "#264484",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-background": "#1b1c19",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#dae2ff",
+                        "surface-dim": "#dbdad5",
+                        "tertiary": "#000000",
+                        "on-surface": "#1b1c19",
+                        "inverse-primary": "#c8c6c5",
+                        "secondary-fixed": "#ffdbcc",
+                        "error-container": "#ffdad6",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "outline": "#747878",
+                        "primary-container": "#1c1b1b",
+                        "on-tertiary-fixed": "#001946",
+                        "primary-fixed": "#e5e2e1"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter-mobile": "16px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "64px",
+                        "gutter-desktop": "32px",
+                        "container-max": "1280px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Public Sans"],
+                        "label-caps": ["Public Sans"],
+                        "body-lg": ["Public Sans"],
+                        "headline-md": ["Playfair Display"],
+                        "display-lg": ["Playfair Display"],
+                        "headline-sm": ["Playfair Display"],
+                        "display-lg-mobile": ["Playfair Display"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "display-lg": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "1.2", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col md:flex-row selection:bg-secondary selection:text-on-secondary">
+<!-- Image Section (Left side on desktop, top on mobile) -->
+<div class="relative w-full h-[442px] md:w-1/2 md:h-screen shrink-0 overflow-hidden bg-surface-container">
+<img alt="" class="absolute inset-0 w-full h-full object-cover object-center transform scale-105 transition-transform duration-[10s] ease-out hover:scale-100" data-alt="A breathtaking, high-resolution artistic photograph of traditional Indian kitchen tools resting on a weathered, tactile wooden surface. The scene features a heavy stone silbatta (grinding stone), gleaming antique brass bowls, and a rustic mortar and pestle. The tools are dusted lightly with vibrant, contrasting hues of red chili powder and golden turmeric. The lighting is moody and cinematic, reminiscent of a high-end gallery exhibit in a museum, casting soft, dramatic ambient shadows that emphasize the rough textures of the stone and the polished sheen of the metal. The overall aesthetic is 'Modern-Editorial', evoking a sense of timeless discovery and scholarly authority." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAW7YB7vQGEwlztKMGy9G4sdvEJ0_-skC8ZXJUhw8F6Efl5WeZkesTTMfEXsXpUUDmydGkdPZ39CvQePBAhZDwJfK7hOD_1mkiMFzb8Rmxxcl5VO2rOg1jojjRk8_3eiUDH54oohJGcG6xq4eMaobHGQA8BqRTdzESyWoSOx6APCeA7COfKG8vHO5FQM-aXe8QB8K8n-xl1XDp5mfZTYmvB63sSdPt8CP5I4SXWXZxzCZiptZuVOjgPwY3F9hcytw-3sSX1LkI-OzZW">
+<!-- Subtle gradient overlay to ensure edge blending on mobile -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface to-transparent md:hidden opacity-80"></div>
+</div>
+<!-- Content Section (Right side on desktop, bottom on mobile) -->
+<div class="w-full md:w-1/2 flex flex-col justify-center px-margin-mobile py-12 md:px-margin-desktop md:py-24 z-10 -mt-8 md:mt-0 bg-surface rounded-t-[2rem] md:rounded-none relative">
+<div class="max-w-xl mx-auto md:mx-0 w-full">
+<!-- Progress Indicator -->
+<div class="mb-12">
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-caps text-label-caps text-secondary uppercase tracking-widest">Introduction</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">Step 1 of 8</span>
+</div>
+<div class="grid grid-cols-8 gap-2 h-[2px]">
+<div class="h-full bg-secondary rounded-full"></div>
+<div class="h-full bg-surface-variant rounded-full"></div>
+<div class="h-full bg-surface-variant rounded-full"></div>
+<div class="h-full bg-surface-variant rounded-full"></div>
+<div class="h-full bg-surface-variant rounded-full"></div>
+<div class="h-full bg-surface-variant rounded-full"></div>
+<div class="h-full bg-surface-variant rounded-full"></div>
+<div class="h-full bg-surface-variant rounded-full"></div>
+</div>
+</div>
+<!-- Header -->
+<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-primary mb-8 text-balance">
+                Documenting a Legacy
+            </h1>
+<!-- Explanatory Text -->
+<div class="font-body-lg text-body-lg text-on-surface-variant space-y-6 mb-16">
+<p>
+                    You are about to enter a piece of history into the permanent archives. This guided wizard ensures that every heirloom recipe is captured with the editorial rigor it deserves. 
+                </p>
+<p>
+                    Over the next few steps, we will construct the narrative of this dish. We will define its core <strong>Identity</strong> and ingredients, map its geographic <strong>Location</strong>, honor its ancestral <strong>Source</strong>, and meticulously detail the <strong>Process</strong> of its creation.
+                </p>
+</div>
+<!-- Call to Action -->
+<button class="group flex items-center gap-4 bg-primary text-on-primary px-8 py-5 rounded-sm hover:bg-inverse-surface transition-colors duration-300 w-full md:w-auto justify-center md:justify-start">
+<span class="font-label-caps text-label-caps uppercase tracking-widest">Begin Documentation</span>
+<span class="material-symbols-outlined transform group-hover:translate-x-1 transition-transform duration-300" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<!-- Contextual escape hatch (acting as a "back" button to main nav, maintaining transactional focus) -->
+<div class="mt-8 text-center md:text-left">
+<a class="inline-flex items-center gap-2 font-label-caps text-label-caps text-on-surface-variant hover:text-secondary transition-colors uppercase border-b-2 border-transparent hover:border-secondary pb-1" href="#">
+<span class="material-symbols-outlined text-[16px]" data-icon="close">close</span>
+                    Return to Archive
+                </a>
+</div>
+</div>
+</div>
+</body></html>

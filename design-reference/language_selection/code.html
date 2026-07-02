@@ -1,0 +1,227 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Language Selection - Culinary Heritage</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&amp;family=Public+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#1c1b1b",
+                        "surface-bright": "#fbf9f4",
+                        "on-surface-variant": "#444748",
+                        "background": "#fbf9f4",
+                        "primary": "#000000",
+                        "surface": "#fbf9f4",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#b1c5ff",
+                        "secondary-fixed": "#ffdbcc",
+                        "surface-container": "#f0eee9",
+                        "surface-container-low": "#f5f3ee",
+                        "on-tertiary-container": "#6782c6",
+                        "inverse-primary": "#c8c6c5",
+                        "primary-container": "#1c1b1b",
+                        "error-container": "#ffdad6",
+                        "on-background": "#1b1c19",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "secondary": "#a04100",
+                        "tertiary": "#000000",
+                        "tertiary-fixed": "#dae2ff",
+                        "secondary-fixed-dim": "#ffb693",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed": "#001946",
+                        "surface-tint": "#5f5e5e",
+                        "on-secondary-fixed": "#351000",
+                        "on-secondary-fixed-variant": "#7a2f00",
+                        "secondary-container": "#fe7f3b",
+                        "outline-variant": "#c4c7c7",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#001946",
+                        "surface-container-high": "#eae8e3",
+                        "on-surface": "#1b1c19",
+                        "outline": "#747878",
+                        "on-tertiary-fixed-variant": "#264484",
+                        "inverse-surface": "#30312e",
+                        "primary-fixed": "#e5e2e1",
+                        "on-primary-container": "#858383",
+                        "error": "#ba1a1a",
+                        "surface-dim": "#dbdad5",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#e4e2dd",
+                        "on-primary-fixed-variant": "#474746",
+                        "surface-container-highest": "#e4e2dd",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-secondary-container": "#652600"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-mobile": "20px",
+                        "gutter-mobile": "16px",
+                        "gutter-desktop": "32px",
+                        "unit": "8px",
+                        "container-max": "1280px",
+                        "margin-desktop": "64px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Public Sans"],
+                        "label-caps": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "headline-sm": ["Playfair Display"],
+                        "headline-md": ["Playfair Display"],
+                        "display-lg-mobile": ["Playfair Display"],
+                        "display-lg": ["Playfair Display"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "headline-md": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "display-lg": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .pattern-bg {
+            background-image: radial-gradient(var(--tw-colors-outline-variant) 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.15;
+        }
+        .radio-custom:checked + div {
+            border-color: var(--tw-colors-primary);
+            background-color: var(--tw-colors-surface-container);
+        }
+        .radio-custom:checked + div .check-icon {
+            opacity: 1;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen relative overflow-x-hidden font-body-md flex flex-col">
+<!-- Subtle Watermark Pattern -->
+<div class="absolute inset-0 pattern-bg pointer-events-none z-0"></div>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col relative z-10 w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-[80px]">
+<!-- Header -->
+<header class="text-center mb-12">
+<h1 class="font-headline-md text-headline-md md:font-display-lg md:text-display-lg text-primary mb-4">Choose Your Heritage Language</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">Select the primary language to experience the culinary archives.</p>
+</header>
+<!-- Language Grid -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-gutter-mobile md:gap-gutter-desktop mb-24">
+<!-- Hindi -->
+<label class="relative cursor-pointer group">
+<input class="peer sr-only radio-custom" name="language" type="radio" value="hindi">
+<div class="border border-outline-variant rounded-xl p-6 h-full flex flex-col items-center justify-center text-center transition-all duration-300 hover:shadow-sm hover:border-primary/50 bg-surface">
+<span class="font-headline-sm text-headline-sm text-primary mb-2">हिंदी</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Hindi</span>
+<div class="absolute top-3 right-3 check-icon opacity-0 transition-opacity duration-300">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</label>
+<!-- Gujarati -->
+<label class="relative cursor-pointer group">
+<input class="peer sr-only radio-custom" name="language" type="radio" value="gujarati">
+<div class="border border-outline-variant rounded-xl p-6 h-full flex flex-col items-center justify-center text-center transition-all duration-300 hover:shadow-sm hover:border-primary/50 bg-surface">
+<span class="font-headline-sm text-headline-sm text-primary mb-2">ગુજરાતી</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Gujarati</span>
+<div class="absolute top-3 right-3 check-icon opacity-0 transition-opacity duration-300">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</label>
+<!-- Punjabi -->
+<label class="relative cursor-pointer group">
+<input class="peer sr-only radio-custom" name="language" type="radio" value="punjabi">
+<div class="border border-outline-variant rounded-xl p-6 h-full flex flex-col items-center justify-center text-center transition-all duration-300 hover:shadow-sm hover:border-primary/50 bg-surface">
+<span class="font-headline-sm text-headline-sm text-primary mb-2">ਪੰਜਾਬੀ</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Punjabi</span>
+<div class="absolute top-3 right-3 check-icon opacity-0 transition-opacity duration-300">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</label>
+<!-- Tamil -->
+<label class="relative cursor-pointer group">
+<input class="peer sr-only radio-custom" name="language" type="radio" value="tamil">
+<div class="border border-outline-variant rounded-xl p-6 h-full flex flex-col items-center justify-center text-center transition-all duration-300 hover:shadow-sm hover:border-primary/50 bg-surface">
+<span class="font-headline-sm text-headline-sm text-primary mb-2">தமிழ்</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Tamil</span>
+<div class="absolute top-3 right-3 check-icon opacity-0 transition-opacity duration-300">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</label>
+<!-- Telugu -->
+<label class="relative cursor-pointer group">
+<input class="peer sr-only radio-custom" name="language" type="radio" value="telugu">
+<div class="border border-outline-variant rounded-xl p-6 h-full flex flex-col items-center justify-center text-center transition-all duration-300 hover:shadow-sm hover:border-primary/50 bg-surface">
+<span class="font-headline-sm text-headline-sm text-primary mb-2">తెలుగు</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Telugu</span>
+<div class="absolute top-3 right-3 check-icon opacity-0 transition-opacity duration-300">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</label>
+<!-- Malayalam -->
+<label class="relative cursor-pointer group">
+<input class="peer sr-only radio-custom" name="language" type="radio" value="malayalam">
+<div class="border border-outline-variant rounded-xl p-6 h-full flex flex-col items-center justify-center text-center transition-all duration-300 hover:shadow-sm hover:border-primary/50 bg-surface">
+<span class="font-headline-sm text-headline-sm text-primary mb-2">മലയാളം</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Malayalam</span>
+<div class="absolute top-3 right-3 check-icon opacity-0 transition-opacity duration-300">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</label>
+<!-- Kannada -->
+<label class="relative cursor-pointer group">
+<input class="peer sr-only radio-custom" name="language" type="radio" value="kannada">
+<div class="border border-outline-variant rounded-xl p-6 h-full flex flex-col items-center justify-center text-center transition-all duration-300 hover:shadow-sm hover:border-primary/50 bg-surface">
+<span class="font-headline-sm text-headline-sm text-primary mb-2">ಕನ್ನಡ</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Kannada</span>
+<div class="absolute top-3 right-3 check-icon opacity-0 transition-opacity duration-300">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</label>
+<!-- English (Default Selected for Demo) -->
+<label class="relative cursor-pointer group">
+<input checked="" class="peer sr-only radio-custom" name="language" type="radio" value="english">
+<div class="border border-outline-variant rounded-xl p-6 h-full flex flex-col items-center justify-center text-center transition-all duration-300 hover:shadow-sm hover:border-primary/50 bg-surface">
+<span class="font-headline-sm text-headline-sm text-primary mb-2">English</span>
+<span class="font-body-md text-body-md text-on-surface-variant">English</span>
+<div class="absolute top-3 right-3 check-icon opacity-0 transition-opacity duration-300">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</label>
+</div>
+</main>
+<!-- Fixed Bottom Action Area -->
+<div class="fixed bottom-0 left-0 w-full bg-surface/90 backdrop-blur-md border-t border-outline-variant p-margin-mobile md:p-6 z-50 flex justify-center">
+<button class="bg-primary text-on-primary font-label-caps text-label-caps rounded-sm px-12 py-4 w-full md:w-auto uppercase tracking-widest hover:bg-surface-tint transition-colors shadow-sm">
+            Continue
+        </button>
+</div>
+</body></html>
