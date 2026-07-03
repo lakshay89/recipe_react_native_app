@@ -13,6 +13,16 @@ import ResetPasswordScreen from '../../features/auth/presentation/ResetPasswordS
 import ProfileSetupScreen from '../../features/profile/presentation/ProfileSetupScreen';
 import TabNavigator from './TabNavigator';
 
+// My Archive screens
+import MyRecipeDetails from '../../features/myArchive/presentation/MyRecipeDetails';
+import EditRecipeScreen from '../../features/myArchive/presentation/EditRecipeScreen';
+import RecipeVersionHistory from '../../features/myArchive/presentation/RecipeVersionHistory';
+import PendingReviewScreen from '../../features/myArchive/presentation/PendingReviewScreen';
+import PublishedRecipesScreen from '../../features/myArchive/presentation/PublishedRecipesScreen';
+import RejectedRecipesScreen from '../../features/myArchive/presentation/RejectedRecipesScreen';
+import DraftRecipesScreen from '../../features/myArchive/presentation/DraftRecipesScreen';
+import TutorialScreen from '../../features/myArchive/presentation/TutorialScreen';
+
 const Stack = createNativeStackNavigator();
 
 export const AppNavigator = () => {
@@ -40,6 +50,16 @@ export const AppNavigator = () => {
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
       <Stack.Screen name="MainApp" component={TabNavigator} />
+      
+      {/* My Archive Stack */}
+      <Stack.Screen name="MyRecipeDetails" component={MyRecipeDetails} />
+      <Stack.Screen name="EditRecipe" component={EditRecipeScreen} />
+      <Stack.Screen name="RecipeVersionHistory" component={RecipeVersionHistory} />
+      <Stack.Screen name="PendingReview" component={PendingReviewScreen} />
+      <Stack.Screen name="PublishedRecipes" component={PublishedRecipesScreen} />
+      <Stack.Screen name="RejectedRecipes" component={RejectedRecipesScreen} />
+      <Stack.Screen name="DraftRecipes" component={DraftRecipesScreen} />
+      <Stack.Screen name="Tutorial" component={TutorialScreen} />
     </Stack.Navigator>
   );
 };

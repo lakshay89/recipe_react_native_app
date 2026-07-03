@@ -7,8 +7,8 @@ import Card from '../../../shared/components/Card';
 
 export const RecipeSubmitSuccessScreen = ({ navigation }) => {
   const handleGoToArchive = () => {
-    // Navigate to MainApp bottom tab navigator's MyContributions screen
-    navigation.navigate('MainApp', { screen: 'MyContributions' });
+    // Navigate to MainApp bottom tab navigator's MyArchive screen
+    navigation.navigate('MainApp', { screen: 'MyArchive' });
   };
 
   return (

@@ -123,12 +123,28 @@ export const AuthProvider = ({ children }) => {
   // Action: Add local Recipe
   const addRecipe = async (recipe) => {
     try {
+      const isDraft = recipe.status === 'Draft';
       const newRecipe = {
         ...recipe,
         id: Date.now().toString(),
-        isApproved: false, // Only approved recipes become public (starts as false/draft)
-        status: 'Pending Review',
+        isApproved: false,
+        status: recipe.status || 'Pending Review',
         createdAt: new Date().toISOString(),
+        versions: [
+          {
+            version: 1,
+            date: new Date().toISOString(),
+            status: recipe.status || 'Pending Review',
+            changes: isDraft ? 'Draft Created' : 'Original Submission',
+          }
+        ],
+        reviewHistory: isDraft ? [] : [
+          {
+            date: new Date().toISOString(),
+            status: 'Pending Review',
+            notes: 'Heritage experts pending review.',
+          }
+        ],
       };
       const updatedRecipes = [newRecipe, ...myRecipes];
       setMyRecipes(updatedRecipes);
@@ -140,18 +156,146 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Action: Edit local Recipe
+  // Action: Edit local Recipe (Pre-published)
   const editRecipe = async (recipeId, updatedData) => {
     try {
       const updatedRecipes = myRecipes.map((r) => {
         if (r.id === recipeId) {
-          // If already published/approved, edits must trigger review state
-          const wasApproved = r.status === 'Approved';
+          const nextVersion = r.versions ? r.versions.length + 1 : 2;
+          const currentVersions = r.versions || [];
           return {
             ...r,
             ...updatedData,
-            status: wasApproved ? 'Pending Edits Review' : 'Pending Review',
-            isApproved: false, // goes back to unapproved until admin reviews
+            versions: [
+              ...currentVersions,
+              {
+                version: nextVersion,
+                date: new Date().toISOString(),
+                status: r.status,
+                changes: 'Contributor updated info',
+              }
+            ]
+          };
+        }
+        return r;
+      });
+      setMyRecipes(updatedRecipes);
+      await AsyncStorage.setItem('@edible_india_recipes', JSON.stringify(updatedRecipes));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Action: Duplicate local Recipe
+  const duplicateRecipe = async (recipeId) => {
+    try {
+      const target = myRecipes.find((r) => r.id === recipeId);
+      if (!target) return;
+      const duplicated = {
+        ...target,
+        id: Date.now().toString(),
+        title: `Copy of ${target.title}`,
+        status: 'Draft',
+        createdAt: new Date().toISOString(),
+        versions: [
+          {
+            version: 1,
+            date: new Date().toISOString(),
+            status: 'Draft',
+            changes: 'Duplicated from existing archive entry',
+          }
+        ],
+        reviewHistory: [],
+      };
+      const updatedRecipes = [duplicated, ...myRecipes];
+      setMyRecipes(updatedRecipes);
+      await AsyncStorage.setItem('@edible_india_recipes', JSON.stringify(updatedRecipes));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Action: Delete local Recipe (only allowed for Draft status)
+  const deleteRecipe = async (recipeId) => {
+    try {
+      const updatedRecipes = myRecipes.filter((r) => r.id !== recipeId);
+      setMyRecipes(updatedRecipes);
+      await AsyncStorage.setItem('@edible_india_recipes', JSON.stringify(updatedRecipes));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Action: Submit Update Request for Published Recipes
+  const submitUpdateRequest = async (recipeId, updatedFields) => {
+    try {
+      const updatedRecipes = myRecipes.map((r) => {
+        if (r.id === recipeId) {
+          const nextVersion = r.versions ? r.versions.length + 1 : 2;
+          const currentVersions = r.versions || [
+            { version: 1, date: r.createdAt || new Date().toISOString(), status: r.status, changes: 'Original Submission' }
+          ];
+          
+          return {
+            ...r,
+            status: 'Update Under Review',
+            pendingUpdate: updatedFields, // Keep original published intact but attach pending fields
+            versions: [
+              ...currentVersions,
+              {
+                version: nextVersion,
+                date: new Date().toISOString(),
+                status: 'Update Under Review',
+                changes: 'Contributor submitted update request',
+              }
+            ],
+            reviewHistory: [
+              ...(r.reviewHistory || []),
+              {
+                date: new Date().toISOString(),
+                status: 'Update Under Review',
+                notes: 'Heritage review initiated on update request.',
+              }
+            ]
+          };
+        }
+        return r;
+      });
+      setMyRecipes(updatedRecipes);
+      await AsyncStorage.setItem('@edible_india_recipes', JSON.stringify(updatedRecipes));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Action: Resubmit a rejected recipe
+  const resubmitRecipe = async (recipeId, updatedFields) => {
+    try {
+      const updatedRecipes = myRecipes.map((r) => {
+        if (r.id === recipeId) {
+          const nextVersion = r.versions ? r.versions.length + 1 : 2;
+          const currentVersions = r.versions || [];
+          return {
+            ...r,
+            ...updatedFields,
+            status: 'Pending Review',
+            versions: [
+              ...currentVersions,
+              {
+                version: nextVersion,
+                date: new Date().toISOString(),
+                status: 'Pending Review',
+                changes: 'Resubmitted after changes',
+              }
+            ],
+            reviewHistory: [
+              ...(r.reviewHistory || []),
+              {
+                date: new Date().toISOString(),
+                status: 'Pending Review',
+                notes: 'Resubmission received. Reviewing changes.',
+              }
+            ]
           };
         }
         return r;
@@ -198,6 +342,10 @@ export const AuthProvider = ({ children }) => {
         logout,
         addRecipe,
         editRecipe,
+        duplicateRecipe,
+        deleteRecipe,
+        submitUpdateRequest,
+        resubmitRecipe,
         saveRecipeDraft,
         clearRecipeDraft,
       }}

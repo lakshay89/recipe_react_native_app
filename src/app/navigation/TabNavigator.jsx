@@ -9,7 +9,7 @@ import HomeScreen from '../../features/home/presentation/HomeScreen';
 import MapScreen from '../../features/map/presentation/MapScreen';
 import SearchScreen from '../../features/search/presentation/SearchScreen';
 import AddRecipeNavigator from './AddRecipeNavigator';
-import MyContributionsScreen from '../../features/myContributions/presentation/MyContributionsScreen';
+import MyArchiveDashboard from '../../features/myArchive/presentation/MyArchiveDashboard';
 
 const Tab = createBottomTabNavigator();
 
@@ -80,8 +80,8 @@ export const TabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="MyContributions"
-        component={MyContributionsScreen}
+        name="MyArchive"
+        component={MyArchiveDashboard}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             if (!isAuthenticated) {
@@ -91,7 +91,7 @@ export const TabNavigator = () => {
           },
         })}
         options={{
-          tabBarLabel: 'Contributions',
+          tabBarLabel: 'My Archive',
           tabBarIcon: ContributionsIcon,
         }}
       />

@@ -84,12 +84,12 @@ export const HomeScreen = ({ navigation }) => {
             <Text style={styles.statusLabel}>Y O U R   A R C H I V E S</Text>
             <Text style={styles.statusTitle}>You have documented {myRecipes.length} recipe(s)</Text>
             <Text style={styles.statusDescription}>
-              View details or edit your contributions under the Contributions tab.
+              View details or edit your submissions under the My Archive tab.
             </Text>
             <Button
-              title="View Contributions"
+              title="View My Archive"
               variant="outline"
-              onPress={() => navigation.navigate('MyContributions')}
+              onPress={() => navigation.navigate('MyArchive')}
               style={styles.statusButton}
             />
           </Card>
