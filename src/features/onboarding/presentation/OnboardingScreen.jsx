@@ -60,7 +60,7 @@ export const OnboardingScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.secondaryBackground} />
-      
+
       {/* Top Visual Section */}
       <View style={styles.visualSection}>
         {/* Decorative Ring Art with Local Asset Images */}
@@ -111,7 +111,7 @@ export const OnboardingScreen = ({ navigation }) => {
 
           {/* Action button */}
           <Button
-            title={currentSlide === SLIDES.length - 1 ? 'Begin' : 'Next →'}
+            title={currentSlide === SLIDES.length - 1 ? 'Begin' : 'Next'}
             variant="primary"
             onPress={handleNext}
             style={styles.actionButton}

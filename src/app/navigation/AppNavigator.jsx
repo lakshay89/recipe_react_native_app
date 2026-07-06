@@ -23,6 +23,10 @@ import RejectedRecipesScreen from '../../features/myArchive/presentation/Rejecte
 import DraftRecipesScreen from '../../features/myArchive/presentation/DraftRecipesScreen';
 import TutorialScreen from '../../features/myArchive/presentation/TutorialScreen';
 
+// Heritage Collections screens
+import CollectionsDashboardScreen from '../../features/collections/presentation/CollectionsDashboardScreen';
+import CollectionDetailsScreen from '../../features/collections/presentation/CollectionDetailsScreen';
+
 const Stack = createNativeStackNavigator();
 
 export const AppNavigator = () => {
@@ -30,7 +34,7 @@ export const AppNavigator = () => {
 
   // Show a blank/loader screen while loading stored auth state
   if (isLoading) {
-    return null; 
+    return null;
   }
 
   return (
@@ -50,7 +54,7 @@ export const AppNavigator = () => {
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
       <Stack.Screen name="MainApp" component={TabNavigator} />
-      
+
       {/* My Archive Stack */}
       <Stack.Screen name="MyRecipeDetails" component={MyRecipeDetails} />
       <Stack.Screen name="EditRecipe" component={EditRecipeScreen} />
@@ -60,6 +64,10 @@ export const AppNavigator = () => {
       <Stack.Screen name="RejectedRecipes" component={RejectedRecipesScreen} />
       <Stack.Screen name="DraftRecipes" component={DraftRecipesScreen} />
       <Stack.Screen name="Tutorial" component={TutorialScreen} />
+
+      {/* Heritage Collections Stack */}
+      <Stack.Screen name="CollectionsDashboard" component={CollectionsDashboardScreen} />
+      <Stack.Screen name="CollectionDetails" component={CollectionDetailsScreen} />
     </Stack.Navigator>
   );
 };

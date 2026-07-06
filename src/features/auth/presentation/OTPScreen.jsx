@@ -69,7 +69,7 @@ export const OTPScreen = ({ route, navigation }) => {
           </View>
 
           <Text style={styles.title}>Verify Your Identity</Text>
-          
+
           <Text style={styles.description}>
             A code has been sent to{'\n'}
             <Text style={styles.boldIdentifier}>{authData.identifier}</Text>

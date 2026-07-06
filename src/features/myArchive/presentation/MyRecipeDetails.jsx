@@ -6,11 +6,24 @@ import Header from '../../../shared/components/Header';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 
+import { ALL_COLLECTIONS } from '../../collections/services/collectionsData';
+
 export const MyRecipeDetails = ({ route, navigation }) => {
   const { recipeId } = route.params;
   const { myRecipes } = useAuth();
   
-  const recipe = myRecipes.find((r) => r.id === recipeId);
+  let recipe = myRecipes.find((r) => r.id === recipeId);
+  const isContributorRecipe = !!recipe;
+
+  if (!recipe) {
+    for (const col of ALL_COLLECTIONS) {
+      const found = col.recipes.find((r) => r.id === recipeId);
+      if (found) {
+        recipe = found;
+        break;
+      }
+    }
+  }
 
   if (!recipe) {
     return (
@@ -155,20 +168,22 @@ export const MyRecipeDetails = ({ route, navigation }) => {
         ) : null}
 
         {/* Bottom Actions */}
-        <View style={styles.buttonRow}>
-          <Button
-            title="View History Timeline"
-            variant="outline"
-            onPress={() => navigation.navigate('RecipeVersionHistory', { recipeId: recipe.id })}
-            style={styles.actionBtn}
-          />
-          <Button
-            title="Edit Recipe Card"
-            variant="primary"
-            onPress={() => navigation.navigate('EditRecipe', { recipeId: recipe.id })}
-            style={styles.actionBtn}
-          />
-        </View>
+        {isContributorRecipe && (
+          <View style={styles.buttonRow}>
+            <Button
+              title="View History Timeline"
+              variant="outline"
+              onPress={() => navigation.navigate('RecipeVersionHistory', { recipeId: recipe.id })}
+              style={styles.actionBtn}
+            />
+            <Button
+              title="Edit Recipe Card"
+              variant="primary"
+              onPress={() => navigation.navigate('EditRecipe', { recipeId: recipe.id })}
+              style={styles.actionBtn}
+            />
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,7 +1,9 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, StyleSheet, Platform } from 'react-native';
-import { COLORS, FONTS, BORDERS, SHADOWS } from '../../core/theme/theme';
+import { StyleSheet, Platform } from 'react-native';
+import { Home, MapPin, Search, BookPlus, Archive } from 'lucide-react-native';
+
+import { COLORS, FONTS, SHADOWS } from '../../core/theme/theme';
 import { useAuth } from '../../shared/services/AuthContext';
 
 // Screens
@@ -13,17 +15,12 @@ import MyArchiveDashboard from '../../features/myArchive/presentation/MyArchiveD
 
 const Tab = createBottomTabNavigator();
 
-const TabIcon = ({ symbol, focused }) => (
-  <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>
-    {symbol}
-  </Text>
-);
-
-const HomeIcon = ({ focused }) => <TabIcon symbol="🏛" focused={focused} />;
-const MapIcon = ({ focused }) => <TabIcon symbol="🗺" focused={focused} />;
-const SearchIcon = ({ focused }) => <TabIcon symbol="🔍" focused={focused} />;
-const AddRecipeIcon = ({ focused }) => <TabIcon symbol="✍" focused={focused} />;
-const ContributionsIcon = ({ focused }) => <TabIcon symbol="📜" focused={focused} />;
+// Static Icon Renderers to prevent re-creation warnings
+const RenderHomeIcon = ({ color }) => <Home size={22} color={color} strokeWidth={2.2} />;
+const RenderMapIcon = ({ color }) => <MapPin size={22} color={color} strokeWidth={2.2} />;
+const RenderSearchIcon = ({ color }) => <Search size={22} color={color} strokeWidth={2.2} />;
+const RenderAddIcon = ({ color }) => <BookPlus size={22} color={color} strokeWidth={2.2} />;
+const RenderArchiveIcon = ({ color }) => <Archive size={22} color={color} strokeWidth={2.2} />;
 
 export const TabNavigator = () => {
   const { isAuthenticated } = useAuth();
@@ -32,8 +29,8 @@ export const TabNavigator = () => {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textMuted,
+        tabBarActiveTintColor: COLORS.secondary, // Deep Forest Green active icon/label
+        tabBarInactiveTintColor: COLORS.textMuted, // Muted inactive icon/label
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabBarLabel,
         tabBarHideOnKeyboard: true,
@@ -44,25 +41,28 @@ export const TabNavigator = () => {
         component={HomeScreen}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: HomeIcon,
+          tabBarIcon: RenderHomeIcon,
         }}
       />
+
       <Tab.Screen
         name="Map"
         component={MapScreen}
         options={{
           tabBarLabel: 'Map',
-          tabBarIcon: MapIcon,
+          tabBarIcon: RenderMapIcon,
         }}
       />
+
       <Tab.Screen
         name="Search"
         component={SearchScreen}
         options={{
           tabBarLabel: 'Search',
-          tabBarIcon: SearchIcon,
+          tabBarIcon: RenderSearchIcon,
         }}
       />
+
       <Tab.Screen
         name="AddRecipe"
         component={AddRecipeNavigator}
@@ -76,9 +76,10 @@ export const TabNavigator = () => {
         })}
         options={{
           tabBarLabel: 'Add Recipe',
-          tabBarIcon: AddRecipeIcon,
+          tabBarIcon: RenderAddIcon,
         }}
       />
+
       <Tab.Screen
         name="MyArchive"
         component={MyArchiveDashboard}
@@ -92,7 +93,7 @@ export const TabNavigator = () => {
         })}
         options={{
           tabBarLabel: 'My Archive',
-          tabBarIcon: ContributionsIcon,
+          tabBarIcon: RenderArchiveIcon,
         }}
       />
     </Tab.Navigator>
@@ -102,34 +103,27 @@ export const TabNavigator = () => {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 28 : 16,
+    bottom: Platform.OS === 'ios' ? 24 : 14,
     left: 16,
     right: 16,
-    backgroundColor: COLORS.white, // Floating card style
-    borderRadius: 30, // Fully rounded container
-    height: 64,
-    paddingBottom: 0,
-    paddingTop: 0,
-    borderWidth: BORDERS.widthThin,
-    borderColor: COLORS.borderLight,
+    height: 58,
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E7D8C5', // Subtle warm border
+    paddingTop: 8,
+    paddingBottom: Platform.OS === 'ios' ? 8 : 8,
     ...SHADOWS.medium,
     elevation: 4,
-    flexDirection: 'row',
   },
   tabBarLabel: {
     ...FONTS.bodyMedium,
-    fontSize: 10,
+    fontSize: 10.5,
+    fontWeight: '600',
     letterSpacing: 0.1,
-    marginBottom: 4,
-  },
-  tabIcon: {
-    fontSize: 18,
-    opacity: 0.5,
-    marginTop: 6,
-  },
-  tabIconActive: {
-    opacity: 1,
-    color: COLORS.primary,
+    marginTop: 2,
+    marginBottom: Platform.OS === 'ios' ? 0 : 2,
+    textAlign: 'center',
   },
 });
 

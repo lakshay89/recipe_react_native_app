@@ -9,11 +9,11 @@ import Card from '../../../shared/components/Card';
 export const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
-  
+
   // Login Form States
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  
+
   // Signup Form States
   const [signupName, setSignupName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
@@ -49,7 +49,7 @@ export const LoginScreen = ({ navigation }) => {
       } else if (signupPassword.length < 6) {
         newErrors.signupPassword = 'Password must be at least 6 characters';
       }
-      
+
       if (!signupConfirmPassword.trim()) {
         newErrors.signupConfirmPassword = 'Confirm Password is required';
       } else if (signupPassword !== signupConfirmPassword) {
@@ -95,7 +95,7 @@ export const LoginScreen = ({ navigation }) => {
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          
+
           {/* Brand Header Section */}
           <View style={styles.header}>
             <View style={styles.brandIconContainer}>
@@ -176,7 +176,7 @@ export const LoginScreen = ({ navigation }) => {
                   error={errors.signupName}
                   autoCapitalize="words"
                 />
-                
+
                 <Input
                   label="Email *"
                   placeholder="contributor@edibleindia.in"

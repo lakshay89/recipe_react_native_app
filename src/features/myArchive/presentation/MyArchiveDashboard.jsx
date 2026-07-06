@@ -109,7 +109,7 @@ export const MyArchiveDashboard = ({ navigation }) => {
                 <Text style={styles.welcomeSubtitle}>Your verified heritage preservation records.</Text>
               </View>
               <Button
-                title="Guidelines 📖"
+                title="Guidelines"
                 variant="outline"
                 onPress={() => navigation.navigate('Tutorial')}
                 style={styles.guideBtn}
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
   },
   floatingAddBtn: {
     position: 'absolute',
-    bottom: 25,
+    bottom: 90,
     right: 25,
     width: 56,
     height: 56,

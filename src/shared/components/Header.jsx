@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { ArrowLeft, Bell } from 'lucide-react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../core/theme/theme';
 import { useAuth } from '../services/AuthContext';
 
@@ -27,6 +28,10 @@ export const Header = ({
     }
   };
 
+  const handleNotificationPress = () => {
+    Alert.alert('Notifications', 'No new notifications at this time.');
+  };
+
   const getInitials = () => {
     if (user && user.name) {
       return user.name.charAt(0).toUpperCase();
@@ -38,10 +43,16 @@ export const Header = ({
     <View style={styles.headerContainer}>
       <View style={styles.leftContainer}>
         {showBack ? (
-          <TouchableOpacity onPress={handleBack} style={styles.iconButton} activeOpacity={0.7}>
-            <Text style={styles.backArrow}>←</Text>
+          <TouchableOpacity onPress={handleBack} style={styles.backButtonWrapper} activeOpacity={0.7}>
+            <ArrowLeft size={20} color={COLORS.text} strokeWidth={2.2} />
           </TouchableOpacity>
-        ) : null}
+        ) : (
+          <Image
+            source={require('../../assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        )}
       </View>
 
       <View style={styles.titleContainer}>
@@ -53,21 +64,30 @@ export const Header = ({
       <View style={styles.rightContainer}>
         {rightComponent ? (
           rightComponent
-        ) : showAvatar ? (
-          <TouchableOpacity
-            onPress={handleProfilePress}
-            style={styles.avatarButton}
-            activeOpacity={0.8}
-          >
-            {user && user.profileImage ? (
-              <Image source={{ uri: user.profileImage }} style={styles.avatarImage} />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarText}>{getInitials()}</Text>
-              </View>
+        ) : (
+          <View style={styles.rightRow}>
+            {isAuthenticated && (
+              <TouchableOpacity onPress={handleNotificationPress} style={styles.bellButton} activeOpacity={0.7}>
+                <Bell size={21} color={COLORS.secondary} strokeWidth={2.2} />
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
-        ) : null}
+            {showAvatar && (
+              <TouchableOpacity
+                onPress={handleProfilePress}
+                style={styles.avatarButton}
+                activeOpacity={0.8}
+              >
+                {user && user.profileImage ? (
+                  <Image source={{ uri: user.profileImage }} style={styles.avatarImage} />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <Text style={styles.avatarText}>{getInitials()}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
     </View>
   );
@@ -75,17 +95,17 @@ export const Header = ({
 
 const styles = StyleSheet.create({
   headerContainer: {
-    height: 64,
+    height: 60,
     backgroundColor: COLORS.background,
     borderBottomWidth: BORDERS.widthThin,
-    borderColor: COLORS.borderLight, // Soft ivory/gray border
+    borderColor: '#E7D8C5', // Subtle warm border matching specs
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.md,
   },
   leftContainer: {
-    width: 44,
+    width: 80,
     alignItems: 'flex-start',
     justifyContent: 'center',
   },
@@ -95,31 +115,47 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   rightContainer: {
-    width: 44,
+    width: 80,
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
-  headerTitle: {
-    ...FONTS.titleLarge,
-    fontSize: 22,
-    color: COLORS.secondary, // Deep Forest Green title
+  rightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
   },
-  iconButton: {
+  bellButton: {
     padding: SPACING.xs,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  logo: {
+    width: 32,
+    height: 32,
+  },
+  headerTitle: {
+    ...FONTS.titleLarge,
+    fontSize: 20,
+    color: COLORS.secondary, // Deep Forest Green title
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  backButtonWrapper: {
     width: 40,
     height: 40,
-  },
-  backArrow: {
-    fontSize: 22,
-    color: COLORS.text,
-    fontWeight: 'bold',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E7D8C5',
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...SHADOWS.soft,
+    elevation: 1,
   },
   avatarButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     borderWidth: BORDERS.widthThin,
     borderColor: COLORS.gold, // Muted Gold border
     overflow: 'hidden',
@@ -142,7 +178,7 @@ const styles = StyleSheet.create({
   avatarText: {
     color: COLORS.background, // Cream text
     fontWeight: '700',
-    fontSize: 15,
+    fontSize: 14,
   },
 });
 

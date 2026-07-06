@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import Header from '../../../shared/components/Header';
 import Card from '../../../shared/components/Card';
@@ -114,8 +114,15 @@ export const HomeScreen = ({ navigation }) => {
         </Card>
 
         {/* Seasonal Collections Section */}
-        <View style={styles.seasonalHeader}>
+        <View style={styles.seasonalHeaderRow}>
           <Text style={styles.seasonalLabel}>S E A S O N A L  C O L L E C T I O N S</Text>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('CollectionsDashboard')}
+            style={styles.browseAllBtn}
+          >
+            <Text style={styles.browseAllText}>Browse All →</Text>
+          </TouchableOpacity>
         </View>
         
         <ScrollView
@@ -291,8 +298,19 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     lineHeight: 20,
   },
-  seasonalHeader: {
+  seasonalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginVertical: SPACING.md,
+  },
+  browseAllBtn: {
+    paddingVertical: 4,
+  },
+  browseAllText: {
+    ...FONTS.caption,
+    fontWeight: '700',
+    color: COLORS.primary,
   },
   seasonalLabel: {
     ...FONTS.labelCaps,
