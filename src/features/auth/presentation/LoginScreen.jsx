@@ -1,10 +1,39 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
+import { User } from 'lucide-react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import { useAuth } from '../../../shared/services/AuthContext';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
+
+const GoogleIcon = () => (
+  <Svg width="18" height="18" viewBox="0 0 24 24" style={{ marginRight: 10 }}>
+    <Path
+      fill="#4285F4"
+      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+    />
+    <Path
+      fill="#34A853"
+      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+    />
+    <Path
+      fill="#FBBC05"
+      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+    />
+    <Path
+      fill="#EA4335"
+      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+    />
+  </Svg>
+);
+
+const AppleIcon = () => (
+  <Svg width="18" height="18" viewBox="0 0 24 24" fill="#FFFFFF" style={{ marginRight: 10 }}>
+    <Path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.21.67-2.93 1.49-.62.69-1.16 1.84-1.01 2.96 1.12.09 2.27-.57 2.95-1.39z" />
+  </Svg>
+);
 
 export const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
@@ -98,9 +127,11 @@ export const LoginScreen = ({ navigation }) => {
 
           {/* Brand Header Section */}
           <View style={styles.header}>
-            <View style={styles.brandIconContainer}>
-              <Text style={styles.brandIcon}>🏛</Text>
-            </View>
+            <Image
+              source={require('../../../assets/images/logo.png')}
+              style={styles.authLogo}
+              resizeMode="contain"
+            />
             <Text style={styles.portalTag}>CONTRIBUTOR PORTAL</Text>
             <Text style={styles.title}>
               {isLogin ? 'Welcome Back, Guardian' : 'Create Your Heritage Profile'}
@@ -242,31 +273,41 @@ export const LoginScreen = ({ navigation }) => {
           {/* Social Logins Divider */}
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
+            <Text style={styles.dividerText}>or continue with</Text>
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Premium Google & Apple Options */}
+          {/* Premium Material design buttons */}
           <View style={styles.socialContainer}>
-            <TouchableOpacity style={styles.socialBtn} activeOpacity={0.8}>
-              <Text style={styles.socialSymbol}>🇬</Text>
-              <Text style={styles.socialBtnText}>Continue with Google</Text>
+            <TouchableOpacity
+              style={styles.googleBtn}
+              onPress={() => navigation.navigate('MainApp')}
+              activeOpacity={0.85}
+            >
+              <GoogleIcon />
+              <Text style={styles.googleBtnText}>Continue with Google</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.socialBtn} activeOpacity={0.8}>
-              <Text style={styles.socialSymbol}>🍎</Text>
-              <Text style={styles.socialBtnText}>Continue with Apple</Text>
+            {Platform.OS === 'ios' && (
+              <TouchableOpacity
+                style={styles.appleBtn}
+                onPress={() => navigation.navigate('MainApp')}
+                activeOpacity={0.85}
+              >
+                <AppleIcon />
+                <Text style={styles.appleBtnText}>Continue with Apple</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={styles.guestBtn}
+              onPress={() => navigation.navigate('MainApp')}
+              activeOpacity={0.85}
+            >
+              <User size={18} color={COLORS.secondary} style={{ marginRight: 10 }} />
+              <Text style={styles.guestBtnText}>Continue as Guest</Text>
             </TouchableOpacity>
           </View>
-
-          {/* Guest Link */}
-          <TouchableOpacity
-            style={styles.guestButton}
-            onPress={() => navigation.navigate('MainApp')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.guestText}>Explore as Guest</Text>
-          </TouchableOpacity>
 
         </ScrollView>
       </KeyboardAvoidingView>
@@ -275,6 +316,56 @@ export const LoginScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  googleBtn: {
+    height: 46,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#DADCE0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.md,
+    ...SHADOWS.soft,
+    elevation: 1,
+  },
+  googleBtnText: {
+    ...FONTS.bodyBold,
+    fontSize: 14,
+    color: '#3C4043',
+  },
+  appleBtn: {
+    height: 46,
+    backgroundColor: '#000000',
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.md,
+    ...SHADOWS.soft,
+    elevation: 1,
+  },
+  appleBtnText: {
+    ...FONTS.bodyBold,
+    fontSize: 14,
+    color: '#FFFFFF',
+  },
+  guestBtn: {
+    height: 46,
+    backgroundColor: '#FBF7F1',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: COLORS.secondary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.md,
+  },
+  guestBtnText: {
+    ...FONTS.bodyBold,
+    fontSize: 14,
+    color: COLORS.secondary,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.background,
@@ -293,20 +384,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.lg,
   },
-  brandIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: COLORS.secondaryBackground,
-    borderWidth: BORDERS.widthThin,
-    borderColor: COLORS.border,
-    justifyContent: 'center',
-    alignItems: 'center',
+  authLogo: {
+    width: 68,
+    height: 68,
     marginBottom: SPACING.md,
-    ...SHADOWS.soft,
-  },
-  brandIcon: {
-    fontSize: 28,
   },
   portalTag: {
     ...FONTS.labelCaps,
@@ -433,26 +514,9 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: SPACING.sm,
   },
-  socialBtn: {
-    width: '100%',
-    height: 48,
-    backgroundColor: COLORS.white,
-    borderWidth: BORDERS.widthThin,
-    borderColor: COLORS.border,
-    borderRadius: BORDERS.radiusMd,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...SHADOWS.soft,
-  },
   socialSymbol: {
     marginRight: 10,
     fontSize: 18,
-  },
-  socialBtnText: {
-    ...FONTS.bodyMedium,
-    fontSize: 14,
-    color: COLORS.text,
   },
   guestButton: {
     marginTop: SPACING.xl,

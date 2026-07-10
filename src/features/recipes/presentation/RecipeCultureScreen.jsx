@@ -18,9 +18,10 @@ export const RecipeCultureScreen = ({ navigation }) => {
   const [rarityStatus, setRarityStatus] = useState('');
   const [cookingVessel, setCookingVessel] = useState('');
   const [cookingMedium, setCookingMedium] = useState('');
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    if (recipeDraft) {
+    if (recipeDraft && !isHydrated) {
       setFestival(recipeDraft.festival || '');
       setSeason(recipeDraft.season || '');
       setCommunity(recipeDraft.community || '');
@@ -29,8 +30,9 @@ export const RecipeCultureScreen = ({ navigation }) => {
       setRarityStatus(recipeDraft.rarityStatus || '');
       setCookingVessel(recipeDraft.cookingVessel || '');
       setCookingMedium(recipeDraft.cookingMedium || '');
+      setIsHydrated(true);
     }
-  }, [recipeDraft]);
+  }, [recipeDraft, isHydrated]);
 
   const saveCurrentDraft = (silent = true) => {
     const updatedDraft = {
@@ -44,9 +46,16 @@ export const RecipeCultureScreen = ({ navigation }) => {
       cookingVessel,
       cookingMedium,
     };
-    saveRecipeDraft(updatedDraft);
+    saveRecipeDraft(updatedDraft, 'RecipeCulture');
     if (!silent) {
-      Alert.alert('Draft Saved', 'Your progress has been saved locally.');
+      Alert.alert(
+        'Draft Saved',
+        'Your progress has been saved locally.',
+        [
+          { text: 'Keep Curation', style: 'default' },
+          { text: 'Continue Later', onPress: () => navigation.navigate('MainApp') }
+        ]
+      );
     }
     return updatedDraft;
   };

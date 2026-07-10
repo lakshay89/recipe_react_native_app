@@ -1,102 +1,206 @@
-import React from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, FlatList, Image, TouchableOpacity, Alert } from 'react-native';
-import { COLORS, FONTS, SPACING, SHADOWS } from '../../../core/theme/theme';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  SafeAreaView,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator
+} from 'react-native';
+import {
+  Trash2,
+  Edit3,
+  Eye,
+  MapPin,
+  Clock,
+  BookOpen
+} from 'lucide-react-native';
+import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import { useAuth } from '../../../shared/services/AuthContext';
 import Header from '../../../shared/components/Header';
 import Card from '../../../shared/components/Card';
 import Button from '../../../shared/components/Button';
+import { recipeDraftService } from '../../recipes/services/recipeDraftService';
 
 export const DraftRecipesScreen = ({ navigation }) => {
-  const { myRecipes, duplicateRecipe, deleteRecipe } = useAuth();
+  const { saveRecipeDraft } = useAuth();
+  const [drafts, setDrafts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const draftRecipes = myRecipes.filter((r) => r.status === 'Draft');
-
-  const handleDuplicate = (id) => {
-    duplicateRecipe(id);
-    Alert.alert('Draft Cloned', 'A new draft copy has been added to your lists.');
+  // Load saved drafts on screen mount
+  const loadDrafts = async () => {
+    setLoading(true);
+    const savedDrafts = await recipeDraftService.getAllDrafts();
+    setDrafts(savedDrafts);
+    setLoading(false);
   };
 
-  const handleDeletePrompt = (id) => {
+  useEffect(() => {
+    loadDrafts();
+  }, []);
+
+  const handleContinueEditing = async (item) => {
+    // 1. Restore this draft in active context
+    await saveRecipeDraft(item, item.currentStep);
+    
+    // 2. Navigate user to correct Add Recipe wizard step
+    navigation.navigate('AddRecipe', { screen: item.currentStep || 'RecipeIdentity' });
+  };
+
+  const handlePreviewDraft = async (item) => {
+    // 1. Restore active context
+    await saveRecipeDraft(item, item.currentStep);
+    
+    // 2. Route directly to preview layout
+    navigation.navigate('AddRecipe', { screen: 'RecipePreview' });
+  };
+
+  const handleDeletePrompt = (draftId) => {
     Alert.alert(
       'Delete Draft',
-      'Are you sure you want to permanently discard this draft recipe?',
+      'Are you sure you want to permanently discard this recipe draft curation?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => deleteRecipe(id) },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const updated = await recipeDraftService.deleteDraft(draftId);
+            setDrafts(updated);
+          }
+        }
       ]
     );
   };
 
+  const formatRelativeTime = (isoString) => {
+    try {
+      const diffMs = Date.now() - new Date(isoString).getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      return new Date(isoString).toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return '';
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor="#FBF7F1" />
       <Header title="My Drafts" showBack={true} showAvatar={false} />
 
-      <FlatList
-        data={draftRecipes}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <Card variant="default" style={styles.recipeCard}>
-            <View style={styles.contentRow}>
+      {loading ? (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loaderText}>Loading Curation Drafts...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={drafts}
+          keyExtractor={(item) => item.draftId}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <Card variant="default" style={styles.recipeCard}>
               <View style={styles.infoCol}>
-                <Text style={styles.recipeTitle}>{item.title || 'Untitled Draft'}</Text>
-                <Text style={styles.locationText}>
-                  📍 {item.region || 'No region'} • Created: {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}
-                </Text>
-                {item.history ? (
-                  <Text style={styles.previewStory} numberOfLines={1}>
-                    Story: {item.history}
+                {/* Draft Header */}
+                <View style={styles.cardHeader}>
+                  <Text style={styles.recipeTitle}>
+                    {item.recipeName || item.title || 'Untitled Draft'}
                   </Text>
-                ) : null}
+                  <Text style={styles.timeText}>
+                    <Clock size={12} color={COLORS.textMuted} style={styles.inlineIcon} />{' '}
+                    {formatRelativeTime(item.updatedAt)}
+                  </Text>
+                </View>
 
+                {/* Region Watermark */}
+                <View style={styles.metaRow}>
+                  <MapPin size={13} color={COLORS.primary} style={styles.inlineIcon} />
+                  <Text style={styles.locationText}>
+                    {item.region || 'Region undefined'}
+                  </Text>
+                </View>
+
+                {/* Progress bar percentage */}
+                <View style={styles.progressRow}>
+                  <View style={styles.progressBarOuter}>
+                    <View style={[styles.progressBarFill, { width: `${item.completionPercentage || 0}%` }]} />
+                  </View>
+                  <Text style={styles.percentageText}>
+                    {Math.round(item.completionPercentage || 0)}% Complete
+                  </Text>
+                </View>
+
+                {/* Action Controls */}
                 <View style={styles.actionsPanel}>
                   <TouchableOpacity
-                    onPress={() => navigation.navigate('EditRecipe', { recipeId: item.id })}
+                    onPress={() => handleContinueEditing(item)}
                     style={styles.actionBtn}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.actionText}>Continue Editing</Text>
+                    <Edit3 size={14} color={COLORS.primary} style={styles.btnIcon} />
+                    <Text style={styles.actionText}>Continue</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    onPress={() => handleDuplicate(item.id)}
+                    onPress={() => navigation.navigate('EditRecipe', { recipeId: item.draftId, isDraft: true })}
                     style={styles.actionBtn}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.actionText}>Duplicate</Text>
+                    <Edit3 size={14} color={COLORS.gold} style={styles.btnIcon} />
+                    <Text style={[styles.actionText, { color: COLORS.gold }]}>Form Edit</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    onPress={() => handleDeletePrompt(item.id)}
+                    onPress={() => handlePreviewDraft(item)}
+                    style={styles.actionBtn}
+                    activeOpacity={0.7}
+                  >
+                    <Eye size={14} color={COLORS.secondary} style={styles.btnIcon} />
+                    <Text style={[styles.actionText, { color: COLORS.secondary }]}>Preview</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => handleDeletePrompt(item.draftId)}
                     style={[styles.actionBtn, styles.deleteBtn]}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.deleteText}>Delete Draft</Text>
+                    <Trash2 size={14} color={COLORS.error} style={styles.btnIcon} />
+                    <Text style={styles.deleteText}>Delete</Text>
                   </TouchableOpacity>
                 </View>
               </View>
+            </Card>
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconCircle}>
+                <BookOpen size={40} color={COLORS.gold} />
+              </View>
+              <Text style={styles.emptyText}>No Active Drafts Found</Text>
+              <Text style={styles.emptySub}>
+                All your edits have been completed and archived. Begin a new heritage recipe curation below.
+              </Text>
+              <Button
+                title="Add Heritage Recipe"
+                variant="primary"
+                onPress={() => navigation.navigate('AddRecipe')}
+                style={styles.emptyBtn}
+              />
             </View>
-          </Card>
-        )}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Image
-              source={require('../../../assets/images/logo.png')}
-              style={styles.emptyLogo}
-              resizeMode="contain"
-            />
-            <Text style={styles.emptyText}>You have no drafts</Text>
-            <Text style={styles.emptySub}>
-              All your edits have been submitted. Tap below to start documenting a new regional food tradition.
-            </Text>
-            <Button
-              title="Add Heritage Recipe"
-              variant="primary"
-              onPress={() => navigation.navigate('AddRecipe')}
-              style={styles.emptyBtn}
-            />
-          </View>
-        }
-      />
+          }
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -104,7 +208,17 @@ export const DraftRecipesScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#FBF7F1', // Primary Cream
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loaderText: {
+    ...FONTS.bodyMedium,
+    color: COLORS.textMuted,
+    marginTop: 12,
   },
   listContainer: {
     paddingHorizontal: SPACING.lg,
@@ -112,85 +226,137 @@ const styles = StyleSheet.create({
     paddingBottom: 110,
   },
   recipeCard: {
-    padding: SPACING.md,
+    padding: 16,
     backgroundColor: COLORS.white,
-    borderColor: COLORS.borderLight,
+    borderColor: '#ECE3D7',
+    borderWidth: BORDERS.widthThin,
+    borderRadius: 16,
     marginBottom: SPACING.md,
     ...SHADOWS.soft,
-  },
-  contentRow: {
-    flexDirection: 'row',
   },
   infoCol: {
     flex: 1,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
   recipeTitle: {
     ...FONTS.titleMedium,
-    fontSize: 17,
-    color: COLORS.text,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2B2B2B',
+    flex: 1,
+    marginRight: 10,
+  },
+  timeText: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  inlineIcon: {
+    marginRight: 4,
   },
   locationText: {
     ...FONTS.caption,
-    fontSize: 11,
-    color: COLORS.textMuted,
-    marginVertical: 2,
+    fontSize: 12,
+    color: '#666666',
   },
-  previewStory: {
-    ...FONTS.caption,
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  progressBarOuter: {
+    flex: 1,
+    height: 6,
+    backgroundColor: '#F3EDE4',
+    borderRadius: 3,
+    marginRight: 8,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: COLORS.primary,
+  },
+  percentageText: {
     fontSize: 11,
-    color: COLORS.text,
-    marginVertical: 2,
+    fontWeight: '700',
+    color: COLORS.primary,
   },
   actionsPanel: {
     flexDirection: 'row',
-    marginTop: SPACING.sm,
-    gap: SPACING.md,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.borderLight,
-    paddingTop: SPACING.xs,
+    marginTop: 4,
+    gap: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#ECE3D7',
+    paddingTop: 12,
   },
   actionBtn: {
-    paddingVertical: SPACING.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.secondaryBackground,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  btnIcon: {
+    marginRight: 4,
   },
   actionText: {
-    ...FONTS.caption,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.primary,
   },
   deleteBtn: {
     marginLeft: 'auto',
+    backgroundColor: '#FCE8E6',
   },
   deleteText: {
-    ...FONTS.caption,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.error,
   },
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: SPACING.xl,
-    marginTop: SPACING.xl,
+    paddingVertical: 60,
+    paddingHorizontal: 24,
+    marginTop: 40,
   },
-  emptyLogo: {
+  emptyIconCircle: {
     width: 80,
     height: 80,
-    opacity: 0.1,
-    marginBottom: SPACING.md,
+    borderRadius: 40,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: '#ECE3D7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    ...SHADOWS.soft,
   },
   emptyText: {
     ...FONTS.titleMedium,
+    fontSize: 18,
     color: COLORS.secondary,
+    marginBottom: 8,
   },
   emptySub: {
     ...FONTS.body,
     fontSize: 13,
     color: COLORS.textMuted,
     textAlign: 'center',
-    paddingHorizontal: SPACING.xl,
-    marginVertical: SPACING.sm,
+    lineHeight: 18,
+    marginBottom: 20,
   },
   emptyBtn: {
-    width: 200,
-    marginTop: SPACING.md,
+    minWidth: 180,
   },
 });
 

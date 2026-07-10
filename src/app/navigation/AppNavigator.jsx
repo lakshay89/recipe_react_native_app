@@ -27,6 +27,9 @@ import TutorialScreen from '../../features/myArchive/presentation/TutorialScreen
 import CollectionsDashboardScreen from '../../features/collections/presentation/CollectionsDashboardScreen';
 import CollectionDetailsScreen from '../../features/collections/presentation/CollectionDetailsScreen';
 
+// Notifications screen
+import NotificationListScreen from '../../features/notifications/presentation/NotificationListScreen';
+
 const Stack = createNativeStackNavigator();
 
 export const AppNavigator = () => {
@@ -68,6 +71,9 @@ export const AppNavigator = () => {
       {/* Heritage Collections Stack */}
       <Stack.Screen name="CollectionsDashboard" component={CollectionsDashboardScreen} />
       <Stack.Screen name="CollectionDetails" component={CollectionDetailsScreen} />
+
+      {/* Notifications Stack */}
+      <Stack.Screen name="Notifications" component={NotificationListScreen} />
     </Stack.Navigator>
   );
 };

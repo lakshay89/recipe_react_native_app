@@ -15,9 +15,10 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
   const [totalTime, setTotalTime] = useState('');
   const [cookingSteps, setCookingSteps] = useState([{ detail: '' }]);
   const [traditionalTips, setTraditionalTips] = useState('');
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    if (recipeDraft) {
+    if (recipeDraft && !isHydrated) {
       setPrepTime(recipeDraft.prepTime || '');
       setCookTime(recipeDraft.cookTime || '');
       setTotalTime(recipeDraft.totalTime || '');
@@ -25,8 +26,9 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
       if (recipeDraft.cookingStepsList && recipeDraft.cookingStepsList.length > 0) {
         setCookingSteps(recipeDraft.cookingStepsList);
       }
+      setIsHydrated(true);
     }
-  }, [recipeDraft]);
+  }, [recipeDraft, isHydrated]);
 
   const saveCurrentDraft = (silent = true) => {
     // Format instructions list into a single clean string
@@ -44,9 +46,16 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
       instructions: formattedText, // Map to main model string
       traditionalTips,
     };
-    saveRecipeDraft(updatedDraft);
+    saveRecipeDraft(updatedDraft, 'RecipeCookingMethod');
     if (!silent) {
-      Alert.alert('Draft Saved', 'Your progress has been saved locally.');
+      Alert.alert(
+        'Draft Saved',
+        'Your progress has been saved locally.',
+        [
+          { text: 'Keep Curation', style: 'default' },
+          { text: 'Continue Later', onPress: () => navigation.navigate('MainApp') }
+        ]
+      );
     }
     return updatedDraft;
   };

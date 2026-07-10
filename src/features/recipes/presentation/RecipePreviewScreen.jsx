@@ -5,12 +5,20 @@ import { useAuth } from '../../../shared/services/AuthContext';
 import Header from '../../../shared/components/Header';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
+import { recipeDraftService } from '../services/recipeDraftService';
 
 export const RecipePreviewScreen = ({ navigation }) => {
   const { recipeDraft, addRecipe, clearRecipeDraft } = useAuth();
 
-  const handleSaveDraftOnly = () => {
-    Alert.alert('Draft Saved', 'Draft archived successfully. You can complete submission anytime under Add Recipe.');
+  const handleSaveDraftOnly = async () => {
+    if (recipeDraft) {
+      await recipeDraftService.saveDraft(recipeDraft, 'RecipePreview');
+    }
+    Alert.alert(
+      'Draft Saved',
+      'Draft archived successfully. You can complete submission anytime under Add Recipe.',
+      [{ text: 'OK', onPress: () => navigation.navigate('MainApp') }]
+    );
   };
 
   const handleSubmit = async () => {
@@ -37,7 +45,10 @@ export const RecipePreviewScreen = ({ navigation }) => {
     });
 
     if (newRecipe) {
-      // Clear draft
+      // Clear draft in context and list storage
+      if (recipeDraft.draftId) {
+        await recipeDraftService.deleteDraft(recipeDraft.draftId);
+      }
       await clearRecipeDraft();
       navigation.navigate('RecipeSubmitSuccess');
     } else {
@@ -136,13 +147,13 @@ export const RecipePreviewScreen = ({ navigation }) => {
         {/* Action button row */}
         <View style={styles.buttonRow}>
           <Button
-            title="Save Draft Only"
+            title="Save Draft"
             variant="outline"
             onPress={handleSaveDraftOnly}
             style={styles.actionBtn}
           />
           <Button
-            title="Submit to Archive"
+            title="Submit"
             variant="primary"
             onPress={handleSubmit}
             style={styles.actionBtn}

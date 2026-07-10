@@ -37,16 +37,20 @@ export const MyRecipeDetails = ({ route, navigation }) => {
   }
 
   const getStatusBadgeStyle = (status) => {
-    switch (status) {
-      case 'Approved':
-      case 'Published':
+    const s = (status || '').toLowerCase();
+    switch (s) {
+      case 'approved':
+      case 'published':
         return styles.badgePublished;
-      case 'Pending Review':
-      case 'Update Under Review':
+      case 'pending review':
+      case 'pending_review':
+      case 'update under review':
+      case 'update_under_review':
         return styles.badgePending;
-      case 'Rejected':
+      case 'rejected':
         return styles.badgeRejected;
-      case 'Needs Changes':
+      case 'needs changes':
+      case 'changes_requested':
         return styles.badgeNeedsChanges;
       default:
         return styles.badgeDraft;
@@ -171,13 +175,13 @@ export const MyRecipeDetails = ({ route, navigation }) => {
         {isContributorRecipe && (
           <View style={styles.buttonRow}>
             <Button
-              title="View History Timeline"
+              title="View History"
               variant="outline"
               onPress={() => navigation.navigate('RecipeVersionHistory', { recipeId: recipe.id })}
               style={styles.actionBtn}
             />
             <Button
-              title="Edit Recipe Card"
+              title="Edit Recipe"
               variant="primary"
               onPress={() => navigation.navigate('EditRecipe', { recipeId: recipe.id })}
               style={styles.actionBtn}

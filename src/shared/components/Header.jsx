@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Bell } from 'lucide-react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../core/theme/theme';
 import { useAuth } from '../services/AuthContext';
+import { useConnectionStatus } from '../services/offlineService';
 
 export const Header = ({
   title,
@@ -13,6 +14,7 @@ export const Header = ({
 }) => {
   const navigation = useNavigation();
   const { user, isAuthenticated } = useAuth();
+  const isConnected = useConnectionStatus();
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
@@ -29,7 +31,7 @@ export const Header = ({
   };
 
   const handleNotificationPress = () => {
-    Alert.alert('Notifications', 'No new notifications at this time.');
+    navigation.navigate('Notifications');
   };
 
   const getInitials = () => {
@@ -40,60 +42,83 @@ export const Header = ({
   };
 
   return (
-    <View style={styles.headerContainer}>
-      <View style={styles.leftContainer}>
-        {showBack ? (
-          <TouchableOpacity onPress={handleBack} style={styles.backButtonWrapper} activeOpacity={0.7}>
-            <ArrowLeft size={20} color={COLORS.text} strokeWidth={2.2} />
-          </TouchableOpacity>
-        ) : (
-          <Image
-            source={require('../../assets/images/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        )}
-      </View>
+    <View style={styles.outerContainer}>
+      <View style={styles.headerContainer}>
+        <View style={styles.leftContainer}>
+          {showBack ? (
+            <TouchableOpacity onPress={handleBack} style={styles.backButtonWrapper} activeOpacity={0.7}>
+              <ArrowLeft size={20} color={COLORS.text} strokeWidth={2.2} />
+            </TouchableOpacity>
+          ) : (
+            <Image
+              source={require('../../assets/images/logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          )}
+        </View>
 
-      <View style={styles.titleContainer}>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {title}
-        </Text>
-      </View>
+        <View style={styles.titleContainer}>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {title}
+          </Text>
+        </View>
 
-      <View style={styles.rightContainer}>
-        {rightComponent ? (
-          rightComponent
-        ) : (
-          <View style={styles.rightRow}>
-            {isAuthenticated && (
-              <TouchableOpacity onPress={handleNotificationPress} style={styles.bellButton} activeOpacity={0.7}>
-                <Bell size={21} color={COLORS.secondary} strokeWidth={2.2} />
-              </TouchableOpacity>
-            )}
-            {showAvatar && (
-              <TouchableOpacity
-                onPress={handleProfilePress}
-                style={styles.avatarButton}
-                activeOpacity={0.8}
-              >
-                {user && user.profileImage ? (
-                  <Image source={{ uri: user.profileImage }} style={styles.avatarImage} />
-                ) : (
-                  <View style={styles.avatarPlaceholder}>
-                    <Text style={styles.avatarText}>{getInitials()}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
+        <View style={styles.rightContainer}>
+          {rightComponent ? (
+            rightComponent
+          ) : (
+            <View style={styles.rightRow}>
+              {isAuthenticated && (
+                <TouchableOpacity onPress={handleNotificationPress} style={styles.bellButton} activeOpacity={0.7}>
+                  <Bell size={21} color={COLORS.secondary} strokeWidth={2.2} />
+                </TouchableOpacity>
+              )}
+              {showAvatar && (
+                <TouchableOpacity
+                  onPress={handleProfilePress}
+                  style={styles.avatarButton}
+                  activeOpacity={0.8}
+                >
+                  {user && user.profileImage ? (
+                    <Image source={{ uri: user.profileImage }} style={styles.avatarImage} />
+                  ) : (
+                    <View style={styles.avatarPlaceholder}>
+                      <Text style={styles.avatarText}>{getInitials()}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </View>
       </View>
+      {!isConnected && (
+        <View style={styles.offlineBanner}>
+          <Text style={styles.offlineText}>Working Offline. Curation drafts will save locally.</Text>
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    width: '100%',
+  },
+  offlineBanner: {
+    backgroundColor: '#A3441F',
+    paddingVertical: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  offlineText: {
+    color: '#FBF7F1',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
   headerContainer: {
     height: 60,
     backgroundColor: COLORS.background,

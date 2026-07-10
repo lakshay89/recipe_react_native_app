@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, StatusBar, SafeAreaView, FlatList, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import { useAuth } from '../../../shared/services/AuthContext';
@@ -6,19 +6,35 @@ import Header from '../../../shared/components/Header';
 import Card from '../../../shared/components/Card';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
+import { recipeDraftService } from '../../recipes/services/recipeDraftService';
 
 export const MyArchiveDashboard = ({ navigation }) => {
   const { myRecipes, duplicateRecipe, deleteRecipe } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [sortOrder, setSortOrder] = useState('Newest');
+  const [draftCount, setDraftCount] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      recipeDraftService.getAllDrafts().then((list) => {
+        setDraftCount(list.length);
+      });
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   // Archive stats
   const totalCount = myRecipes.length;
-  const draftCount = myRecipes.filter((r) => r.status === 'Draft').length;
-  const pendingCount = myRecipes.filter((r) => r.status === 'Pending Review' || r.status === 'Update Under Review').length;
-  const publishedCount = myRecipes.filter((r) => r.status === 'Approved' || r.status === 'Published').length;
-  const rejectedCount = myRecipes.filter((r) => r.status === 'Rejected').length;
+  const pendingCount = myRecipes.filter((r) => {
+    const s = (r.status || '').toLowerCase();
+    return s === 'pending_review' || s === 'pending review' || s === 'update_under_review' || s === 'update under review';
+  }).length;
+  const publishedCount = myRecipes.filter((r) => {
+    const s = (r.status || '').toLowerCase();
+    return s === 'approved' || s === 'published';
+  }).length;
+  const rejectedCount = myRecipes.filter((r) => (r.status || '').toLowerCase() === 'rejected').length;
 
   // Filter & Search Logic
   const filteredRecipes = myRecipes.filter((recipe) => {
@@ -34,16 +50,17 @@ export const MyArchiveDashboard = ({ navigation }) => {
 
     // 2. Active Filter chip match
     let matchesFilter = true;
+    const statusLower = (recipe.status || '').toLowerCase();
     if (activeFilter === 'Draft') {
-      matchesFilter = recipe.status === 'Draft';
+      matchesFilter = statusLower === 'draft';
     } else if (activeFilter === 'Pending') {
-      matchesFilter = recipe.status === 'Pending Review' || recipe.status === 'Update Under Review';
+      matchesFilter = statusLower === 'pending_review' || statusLower === 'pending review' || statusLower === 'update_under_review' || statusLower === 'update under review';
     } else if (activeFilter === 'Published') {
-      matchesFilter = recipe.status === 'Approved' || recipe.status === 'Published';
+      matchesFilter = statusLower === 'approved' || statusLower === 'published';
     } else if (activeFilter === 'Rejected') {
-      matchesFilter = recipe.status === 'Rejected';
+      matchesFilter = statusLower === 'rejected';
     } else if (activeFilter === 'Update Review') {
-      matchesFilter = recipe.status === 'Update Under Review';
+      matchesFilter = statusLower === 'update_under_review' || statusLower === 'update under review';
     }
 
     return matchesSearch && matchesFilter;
@@ -65,16 +82,20 @@ export const MyArchiveDashboard = ({ navigation }) => {
   };
 
   const getStatusBadgeStyle = (status) => {
-    switch (status) {
-      case 'Approved':
-      case 'Published':
+    const s = (status || '').toLowerCase();
+    switch (s) {
+      case 'approved':
+      case 'published':
         return styles.badgePublished;
-      case 'Pending Review':
-      case 'Update Under Review':
+      case 'pending review':
+      case 'pending_review':
+      case 'update under review':
+      case 'update_under_review':
         return styles.badgePending;
-      case 'Rejected':
+      case 'rejected':
         return styles.badgeRejected;
-      case 'Needs Changes':
+      case 'needs changes':
+      case 'changes_requested':
         return styles.badgeNeedsChanges;
       default:
         return styles.badgeDraft;
@@ -123,22 +144,34 @@ export const MyArchiveDashboard = ({ navigation }) => {
                 <Text style={styles.statVal}>{totalCount}</Text>
                 <Text style={styles.statLabel}>Total Recipes</Text>
               </Card>
-              <Card variant="default" style={styles.statCard}>
-                <Text style={[styles.statVal, { color: COLORS.secondary }]}>{publishedCount}</Text>
-                <Text style={styles.statLabel}>Published</Text>
-              </Card>
-              <Card variant="default" style={styles.statCard}>
-                <Text style={[styles.statVal, { color: COLORS.primary }]}>{pendingCount}</Text>
-                <Text style={styles.statLabel}>Pending</Text>
-              </Card>
-              <Card variant="default" style={styles.statCard}>
-                <Text style={[styles.statVal, { color: COLORS.error }]}>{rejectedCount}</Text>
-                <Text style={styles.statLabel}>Rejected</Text>
-              </Card>
-              <Card variant="default" style={styles.statCard}>
-                <Text style={[styles.statVal, { color: COLORS.textMuted }]}>{draftCount}</Text>
-                <Text style={styles.statLabel}>Drafts</Text>
-              </Card>
+              
+              <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate('PublishedRecipes')}>
+                <Card variant="default" style={styles.statCard}>
+                  <Text style={[styles.statVal, { color: COLORS.secondary }]}>{publishedCount}</Text>
+                  <Text style={styles.statLabel}>Published</Text>
+                </Card>
+              </TouchableOpacity>
+
+              <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate('PendingReview')}>
+                <Card variant="default" style={styles.statCard}>
+                  <Text style={[styles.statVal, { color: COLORS.primary }]}>{pendingCount}</Text>
+                  <Text style={styles.statLabel}>Pending</Text>
+                </Card>
+              </TouchableOpacity>
+
+              <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate('RejectedRecipes')}>
+                <Card variant="default" style={styles.statCard}>
+                  <Text style={[styles.statVal, { color: COLORS.error }]}>{rejectedCount}</Text>
+                  <Text style={styles.statLabel}>Rejected</Text>
+                </Card>
+              </TouchableOpacity>
+
+              <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate('DraftRecipes')}>
+                <Card variant="default" style={styles.statCard}>
+                  <Text style={[styles.statVal, { color: COLORS.textMuted }]}>{draftCount}</Text>
+                  <Text style={styles.statLabel}>Drafts</Text>
+                </Card>
+              </TouchableOpacity>
             </ScrollView>
 
             {/* Search Bar */}

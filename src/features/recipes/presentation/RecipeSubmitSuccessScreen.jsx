@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, StatusBar, SafeAreaView } from 'react-native';
+import { CheckCircle } from 'lucide-react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import Header from '../../../shared/components/Header';
 import Button from '../../../shared/components/Button';
@@ -7,20 +8,23 @@ import Card from '../../../shared/components/Card';
 
 export const RecipeSubmitSuccessScreen = ({ navigation }) => {
   const handleGoToArchive = () => {
-    // Navigate to MainApp bottom tab navigator's MyArchive screen
     navigation.navigate('MainApp', { screen: 'MyArchive' });
+  };
+
+  const handleGoToPending = () => {
+    navigation.navigate('PendingReview');
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor="#FBF7F1" />
       <Header title="Archived Successfully" showBack={false} showAvatar={false} />
 
       <View style={styles.container}>
         <Card variant="heritage" style={styles.successCard}>
           {/* Centered Success Checkmark */}
           <View style={styles.successIconContainer}>
-            <Text style={styles.successIcon}>🏺</Text>
+            <CheckCircle size={40} color={COLORS.primary} strokeWidth={2} />
           </View>
 
           <Text style={styles.congratsTitle}>Curation Preserved</Text>
@@ -38,13 +42,21 @@ export const RecipeSubmitSuccessScreen = ({ navigation }) => {
             Once verified by our culinary historians, the contribution will be pinned to the public India Heritage Map.
           </Text>
 
-          {/* Action button */}
-          <Button
-            title="Go to My Archive"
-            variant="primary"
-            onPress={handleGoToArchive}
-            style={styles.archiveBtn}
-          />
+          {/* Action buttons */}
+          <View style={styles.btnRow}>
+            <Button
+              title="View Pending Submissions"
+              variant="outline"
+              onPress={handleGoToPending}
+              style={styles.actionBtn}
+            />
+            <Button
+              title="Go to My Archive"
+              variant="primary"
+              onPress={handleGoToArchive}
+              style={styles.actionBtn}
+            />
+          </View>
         </Card>
       </View>
     </SafeAreaView>
@@ -54,7 +66,7 @@ export const RecipeSubmitSuccessScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#FBF7F1', // Primary Cream
   },
   container: {
     flex: 1,
@@ -67,7 +79,9 @@ const styles = StyleSheet.create({
     padding: SPACING.xl,
     alignItems: 'center',
     backgroundColor: COLORS.white,
-    borderColor: COLORS.borderLight,
+    borderColor: '#ECE3D7',
+    borderWidth: BORDERS.widthThin,
+    borderRadius: 16,
     ...SHADOWS.medium,
   },
   successIconContainer: {
@@ -81,9 +95,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: COLORS.primary,
     borderStyle: 'dashed',
-  },
-  successIcon: {
-    fontSize: 40,
   },
   congratsTitle: {
     ...FONTS.titleLarge,
@@ -124,7 +135,11 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
     paddingHorizontal: SPACING.sm,
   },
-  archiveBtn: {
+  btnRow: {
+    width: '100%',
+    gap: 12,
+  },
+  actionBtn: {
     width: '100%',
   },
 });

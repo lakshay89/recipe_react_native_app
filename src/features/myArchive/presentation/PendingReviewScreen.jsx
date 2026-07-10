@@ -6,12 +6,15 @@ import Header from '../../../shared/components/Header';
 import Card from '../../../shared/components/Card';
 import Button from '../../../shared/components/Button';
 
+import { MapPin } from 'lucide-react-native';
+
 export const PendingReviewScreen = ({ navigation }) => {
   const { myRecipes } = useAuth();
 
-  const pendingRecipes = myRecipes.filter(
-    (r) => r.status === 'Pending Review' || r.status === 'Update Under Review'
-  );
+  const pendingRecipes = myRecipes.filter((r) => {
+    const s = (r.status || '').toLowerCase();
+    return s === 'pending_review' || s === 'pending review' || s === 'update_under_review' || s === 'update under review';
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -36,7 +39,10 @@ export const PendingReviewScreen = ({ navigation }) => {
             <View style={styles.cardContent}>
               <Text style={styles.recipeTitle}>{item.title}</Text>
               <View style={styles.metaRow}>
-                <Text style={styles.locationText}>📍 {item.region || 'N/A'}</Text>
+                <View style={styles.regionRow}>
+                  <MapPin size={13} color={COLORS.primary} style={styles.pinIcon} />
+                  <Text style={styles.locationText}>{item.region || 'N/A'}</Text>
+                </View>
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{item.status.toUpperCase()}</Text>
                 </View>
@@ -131,6 +137,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginVertical: 2,
+  },
+  regionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pinIcon: {
+    marginRight: 4,
   },
   locationText: {
     ...FONTS.caption,

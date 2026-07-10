@@ -9,9 +9,10 @@ import Button from '../../../shared/components/Button';
 export const PublishedRecipesScreen = ({ navigation }) => {
   const { myRecipes } = useAuth();
 
-  const publishedRecipes = myRecipes.filter(
-    (r) => r.status === 'Approved' || r.status === 'Published'
-  );
+  const publishedRecipes = myRecipes.filter((r) => {
+    const s = (r.status || '').toLowerCase();
+    return s === 'approved' || s === 'published';
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>

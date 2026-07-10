@@ -115,13 +115,6 @@ export const RecipeIdentityScreen = ({ navigation }) => {
           />
 
           <Input
-            label="English Translation Name"
-            placeholder="e.g. Slow-Cooked Spiced Potato"
-            value={englishName}
-            onChangeText={setEnglishName}
-          />
-
-          <Input
             label="Alternative/Dialect Names"
             placeholder="e.g. Alu Dum, Dum Alu"
             value={altNames}

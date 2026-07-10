@@ -1,14 +1,13 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, Platform } from 'react-native';
-import { Home, MapPin, Search, BookPlus, Archive } from 'lucide-react-native';
+import { Home, Search, BookPlus, Archive } from 'lucide-react-native';
 
 import { COLORS, FONTS, SHADOWS } from '../../core/theme/theme';
 import { useAuth } from '../../shared/services/AuthContext';
 
 // Screens
 import HomeScreen from '../../features/home/presentation/HomeScreen';
-import MapScreen from '../../features/map/presentation/MapScreen';
 import SearchScreen from '../../features/search/presentation/SearchScreen';
 import AddRecipeNavigator from './AddRecipeNavigator';
 import MyArchiveDashboard from '../../features/myArchive/presentation/MyArchiveDashboard';
@@ -17,7 +16,6 @@ const Tab = createBottomTabNavigator();
 
 // Static Icon Renderers to prevent re-creation warnings
 const RenderHomeIcon = ({ color }) => <Home size={22} color={color} strokeWidth={2.2} />;
-const RenderMapIcon = ({ color }) => <MapPin size={22} color={color} strokeWidth={2.2} />;
 const RenderSearchIcon = ({ color }) => <Search size={22} color={color} strokeWidth={2.2} />;
 const RenderAddIcon = ({ color }) => <BookPlus size={22} color={color} strokeWidth={2.2} />;
 const RenderArchiveIcon = ({ color }) => <Archive size={22} color={color} strokeWidth={2.2} />;
@@ -45,14 +43,7 @@ export const TabNavigator = () => {
         }}
       />
 
-      <Tab.Screen
-        name="Map"
-        component={MapScreen}
-        options={{
-          tabBarLabel: 'Map',
-          tabBarIcon: RenderMapIcon,
-        }}
-      />
+
 
       <Tab.Screen
         name="Search"

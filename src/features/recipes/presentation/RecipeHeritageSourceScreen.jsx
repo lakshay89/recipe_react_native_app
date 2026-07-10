@@ -30,17 +30,19 @@ export const RecipeHeritageSourceScreen = ({ navigation }) => {
   const [numGenerations, setNumGenerations] = useState('');
   const [approxAge, setApproxAge] = useState('');
   
+  const [isHydrated, setIsHydrated] = useState(false);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (recipeDraft) {
+    if (recipeDraft && !isHydrated) {
       setHeritageSource(recipeDraft.heritageSource || '');
       setHistory(recipeDraft.history || '');
       setWhoTaughtYou(recipeDraft.whoTaughtYou || '');
       setNumGenerations(recipeDraft.numGenerations || '');
       setApproxAge(recipeDraft.approxAge || '');
+      setIsHydrated(true);
     }
-  }, [recipeDraft]);
+  }, [recipeDraft, isHydrated]);
 
   const saveCurrentDraft = (silent = true) => {
     const updatedDraft = {
@@ -51,9 +53,16 @@ export const RecipeHeritageSourceScreen = ({ navigation }) => {
       numGenerations,
       approxAge,
     };
-    saveRecipeDraft(updatedDraft);
+    saveRecipeDraft(updatedDraft, 'RecipeHeritageSource');
     if (!silent) {
-      Alert.alert('Draft Saved', 'Your progress has been saved locally.');
+      Alert.alert(
+        'Draft Saved',
+        'Your progress has been saved locally.',
+        [
+          { text: 'Keep Curation', style: 'default' },
+          { text: 'Continue Later', onPress: () => navigation.navigate('MainApp') }
+        ]
+      );
     }
     return updatedDraft;
   };

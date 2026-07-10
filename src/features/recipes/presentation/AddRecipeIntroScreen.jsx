@@ -1,21 +1,66 @@
-import React from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import Header from '../../../shared/components/Header';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
+import { useAuth } from '../../../shared/services/AuthContext';
+import { recipeDraftService } from '../services/recipeDraftService';
+import { FileText } from 'lucide-react-native';
 
 export const AddRecipeIntroScreen = ({ navigation }) => {
-  const handleBegin = () => {
+  const [draftCount, setDraftCount] = useState(0);
+  const { saveRecipeDraft, clearRecipeDraft } = useAuth();
+
+  // Monitor screen focus to update drafts counter
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      recipeDraftService.getAllDrafts().then((list) => {
+        setDraftCount(list.length);
+      });
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  const handleBegin = async () => {
+    // Generate a fresh draft id and set to active context
+    await clearRecipeDraft();
+    const freshDraft = {
+      draftId: Date.now().toString(),
+      title: '',
+      localName: '',
+      nativeScript: '',
+      // englishName: '',
+      altNames: '',
+      history: '',
+    };
+    await saveRecipeDraft(freshDraft, 'RecipeIdentity');
     navigation.navigate('RecipeIdentity');
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor="#FBF7F1" />
       <Header title="Contribute Recipe" showBack={false} showAvatar={true} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Active Drafts Banner */}
+        {draftCount > 0 && (
+          <TouchableOpacity
+            style={styles.draftBanner}
+            onPress={() => navigation.navigate('DraftRecipes')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.bannerLeft}>
+              <FileText size={18} color={COLORS.secondary} style={styles.bannerIcon} />
+              <Text style={styles.bannerText}>
+                You have {draftCount} active draft{draftCount > 1 ? 's' : ''} in drafts
+              </Text>
+            </View>
+            <Text style={styles.bannerAction}>View Drafts</Text>
+          </TouchableOpacity>
+        )}
+
         {/* Intro Visual Banner */}
         <View style={styles.imageContainer}>
           <Image
@@ -63,12 +108,44 @@ export const AddRecipeIntroScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#FBF7F1', // Primary Cream
   },
   scrollContent: {
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
     paddingBottom: 110,
+  },
+  draftBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F4ECE1',
+    borderColor: '#ECE3D7',
+    borderWidth: BORDERS.widthThin,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    ...SHADOWS.soft,
+  },
+  bannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
+  },
+  bannerIcon: {
+    marginRight: 8,
+  },
+  bannerText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#2B2B2B',
+  },
+  bannerAction: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.primary,
+    textDecorationLine: 'underline',
   },
   imageContainer: {
     height: 150,
@@ -91,21 +168,24 @@ const styles = StyleSheet.create({
   bannerTag: {
     position: 'absolute',
     ...FONTS.labelCaps,
-    color: COLORS.background,
+    color: COLORS.white,
     fontSize: 13,
     letterSpacing: 2,
   },
   infoCard: {
     padding: SPACING.lg,
     backgroundColor: COLORS.white,
-    borderColor: COLORS.borderLight,
+    borderColor: '#ECE3D7',
+    borderWidth: BORDERS.widthThin,
+    borderRadius: 16,
+    marginBottom: SPACING.lg,
     ...SHADOWS.medium,
   },
   title: {
     ...FONTS.titleLarge,
-    fontSize: 24,
+    fontSize: 22,
     color: COLORS.secondary,
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.xs,
   },
   description: {
     ...FONTS.body,
@@ -115,8 +195,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   stepsList: {
-    marginTop: SPACING.xs,
-    gap: SPACING.xs,
+    gap: SPACING.sm,
   },
   stepItem: {
     ...FONTS.body,
@@ -126,10 +205,10 @@ const styles = StyleSheet.create({
   },
   stepItemTitle: {
     fontWeight: '700',
-    color: COLORS.primary,
+    color: COLORS.secondary,
   },
   beginButton: {
-    marginTop: SPACING.xl,
+    width: '100%',
   },
 });
 

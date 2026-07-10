@@ -6,12 +6,24 @@ import Header from '../../../shared/components/Header';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
+import { recipeDraftService } from '../../recipes/services/recipeDraftService';
 
 export const EditRecipeScreen = ({ route, navigation }) => {
   const { recipeId } = route.params;
   const { myRecipes, editRecipe, submitUpdateRequest, resubmitRecipe } = useAuth();
   
-  const recipe = myRecipes.find((r) => r.id === recipeId);
+  const [recipe, setRecipe] = useState(null);
+
+  useEffect(() => {
+    if (route.params?.isDraft) {
+      recipeDraftService.getDraftById(recipeId).then((found) => {
+        if (found) setRecipe(found);
+      });
+    } else {
+      const found = myRecipes.find((r) => r.id === recipeId);
+      if (found) setRecipe(found);
+    }
+  }, [recipeId, myRecipes, route.params]);
 
   // Form Fields State
   const [title, setTitle] = useState('');
@@ -154,6 +166,23 @@ export const EditRecipeScreen = ({ route, navigation }) => {
     };
 
     // Enforce business logic on edit targets
+    if (route.params?.isDraft) {
+      const updatedDraft = {
+        ...recipe,
+        ...fieldsPayload,
+        ingredientsList: recipe.ingredientsList || [],
+        cookingStepsList: recipe.cookingStepsList || [],
+      };
+      recipeDraftService.saveDraft(updatedDraft, recipe.currentStep || 'RecipeIdentity').then(() => {
+        Alert.alert(
+          'Draft Updated',
+          'Your draft recipe curation has been saved successfully.',
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
+        );
+      });
+      return;
+    }
+
     const isPublished = recipe.status === 'Approved' || recipe.status === 'Published';
     const isRejected = recipe.status === 'Rejected';
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
+import { View, Text, StyleSheet, StatusBar, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
+import { COLORS, FONTS, SPACING, SHADOWS } from '../../../core/theme/theme';
 import Header from '../../../shared/components/Header';
 import Card from '../../../shared/components/Card';
 import Input from '../../../shared/components/Input';
@@ -33,9 +33,11 @@ export const ForgotPasswordScreen = ({ navigation }) => {
       >
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <View style={styles.headerContainer}>
-            <View style={styles.brandIconContainer}>
-              <Text style={styles.brandIcon}>🔑</Text>
-            </View>
+            <Image
+              source={require('../../../assets/images/logo.png')}
+              style={styles.authLogo}
+              resizeMode="contain"
+            />
             <Text style={styles.portalTag}>ACCOUNT RECOVERY</Text>
             <Text style={styles.title}>Reset Your Password</Text>
             <Text style={styles.description}>
@@ -87,20 +89,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.xl,
   },
-  brandIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: COLORS.secondaryBackground,
-    borderWidth: BORDERS.widthThin,
-    borderColor: COLORS.border,
-    justifyContent: 'center',
-    alignItems: 'center',
+  authLogo: {
+    width: 68,
+    height: 68,
     marginBottom: SPACING.md,
-    ...SHADOWS.soft,
-  },
-  brandIcon: {
-    fontSize: 28,
   },
   portalTag: {
     ...FONTS.labelCaps,

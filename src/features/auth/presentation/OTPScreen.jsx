@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, SafeAreaView, Alert, Platform, Image } from 'react-native';
 import { COLORS, FONTS, SPACING, SHADOWS } from '../../../core/theme/theme';
 import { useAuth } from '../../../shared/services/AuthContext';
 import Input from '../../../shared/components/Input';
@@ -64,9 +64,11 @@ export const OTPScreen = ({ route, navigation }) => {
       <View style={styles.container}>
         <Card variant="heritage" style={styles.otpCard}>
           {/* Fingerprint branding */}
-          <View style={styles.securityIconContainer}>
-            <Text style={styles.securityIcon}>🔑</Text>
-          </View>
+          <Image
+            source={require('../../../assets/images/logo.png')}
+            style={styles.authLogo}
+            resizeMode="contain"
+          />
 
           <Text style={styles.title}>Verify Your Identity</Text>
 
@@ -130,17 +132,11 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderLight,
     ...SHADOWS.medium,
   },
-  securityIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: COLORS.secondaryBackground,
-    justifyContent: 'center',
-    alignItems: 'center',
+  authLogo: {
+    width: 68,
+    height: 68,
     marginBottom: SPACING.lg,
-  },
-  securityIcon: {
-    fontSize: 28,
+    alignSelf: 'center',
   },
   title: {
     ...FONTS.titleLarge,

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, StatusBar, SafeAreaView, FlatList, Image } from 'react-native';
+import { MapPin, AlertTriangle } from 'lucide-react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import { useAuth } from '../../../shared/services/AuthContext';
 import Header from '../../../shared/components/Header';
@@ -9,7 +10,7 @@ import Button from '../../../shared/components/Button';
 export const RejectedRecipesScreen = ({ navigation }) => {
   const { myRecipes } = useAuth();
 
-  const rejectedRecipes = myRecipes.filter((r) => r.status === 'Rejected');
+  const rejectedRecipes = myRecipes.filter((r) => (r.status || '').toLowerCase() === 'rejected');
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -26,17 +27,23 @@ export const RejectedRecipesScreen = ({ navigation }) => {
           const lastLog = item.reviewHistory && item.reviewHistory.length > 0
             ? item.reviewHistory[item.reviewHistory.length - 1]
             : null;
-          const rejectionNotes = lastLog?.notes || 'Incomplete lineage history or duplicate entry detected.';
+          const rejectionNotes = item.rejectionReason || lastLog?.notes || 'Incomplete lineage history or duplicate entry detected.';
 
           return (
             <Card variant="default" style={styles.recipeCard}>
               <Text style={styles.recipeTitle}>{item.title}</Text>
               
-              <Text style={styles.locationText}>📍 {item.region || 'N/A'}, {item.district || 'N/A'}</Text>
+              <View style={styles.locationRow}>
+                <MapPin size={13} color={COLORS.primary} style={styles.pinIcon} />
+                <Text style={styles.locationText}>{item.region || 'N/A'}, {item.district || 'N/A'}</Text>
+              </View>
               
               {/* Rejection Alert Box */}
               <View style={styles.rejectionBox}>
-                <Text style={styles.rejectionTitle}>⚠️ Rejection Reason:</Text>
+                <View style={styles.rejectionHeader}>
+                  <AlertTriangle size={14} color="#C5221F" style={styles.warnIcon} />
+                  <Text style={styles.rejectionTitle}>Rejection Reason:</Text>
+                </View>
                 <Text style={styles.rejectionNotes}>{rejectionNotes}</Text>
               </View>
 
@@ -110,6 +117,22 @@ const styles = StyleSheet.create({
     borderRadius: BORDERS.radiusMd,
     padding: SPACING.sm,
     marginVertical: SPACING.sm,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  pinIcon: {
+    marginRight: 4,
+  },
+  rejectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  warnIcon: {
+    marginRight: 4,
   },
   rejectionTitle: {
     ...FONTS.bodyBold,

@@ -115,7 +115,7 @@ export const HomeScreen = ({ navigation }) => {
 
         {/* Seasonal Collections Section */}
         <View style={styles.seasonalHeaderRow}>
-          <Text style={styles.seasonalLabel}>S E A S O N A L  C O L L E C T I O N S</Text>
+          <Text style={styles.seasonalLabel}>SEASONAL COLLECTIONS</Text>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => navigation.navigate('CollectionsDashboard')}
@@ -306,6 +306,7 @@ const styles = StyleSheet.create({
   },
   browseAllBtn: {
     paddingVertical: 4,
+    // backgroundColor:'#d1a100',
   },
   browseAllText: {
     ...FONTS.caption,

@@ -61,6 +61,13 @@ export const OnboardingScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.secondaryBackground} />
 
+      {/* Subtle Logo Watermark */}
+      <Image
+        source={require('../../../assets/images/logo.png')}
+        style={styles.watermarkLogo}
+        resizeMode="contain"
+      />
+
       {/* Top Visual Section */}
       <View style={styles.visualSection}>
         {/* Decorative Ring Art with Local Asset Images */}
@@ -170,6 +177,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  watermarkLogo: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    top: '30%',
+    left: '50%',
+    marginLeft: -100,
+    opacity: 0.05,
+    zIndex: -1,
   },
   tagline: {
     ...FONTS.labelCaps,
