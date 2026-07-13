@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, Dimensions, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, Dimensions, TouchableOpacity, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, FONTS, SPACING, SHADOWS } from '../../../core/theme/theme';
 import { useAuth } from '../../../shared/services/AuthContext';
 import Button from '../../../shared/components/Button';

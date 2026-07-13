@@ -11,6 +11,9 @@ import OTPScreen from '../../features/auth/presentation/OTPScreen';
 import ForgotPasswordScreen from '../../features/auth/presentation/ForgotPasswordScreen';
 import ResetPasswordScreen from '../../features/auth/presentation/ResetPasswordScreen';
 import ProfileSetupScreen from '../../features/profile/presentation/ProfileSetupScreen';
+import ProfileScreen from '../../features/profile/presentation/ProfileScreen';
+import SettingsScreen from '../../features/settings/presentation/SettingsScreen';
+import ExhibitDetailsScreen from '../../features/exhibits/presentation/ExhibitDetailsScreen';
 import TabNavigator from './TabNavigator';
 
 // My Archive screens
@@ -56,6 +59,9 @@ export const AppNavigator = () => {
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="ExhibitDetails" component={ExhibitDetailsScreen} />
       <Stack.Screen name="MainApp" component={TabNavigator} />
 
       {/* My Archive Stack */}

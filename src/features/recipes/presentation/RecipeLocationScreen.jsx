@@ -1,11 +1,28 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Alert, PermissionsAndroid, Platform } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, ScrollView, Alert, TouchableOpacity, PermissionsAndroid, Platform } from 'react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import { useAuth } from '../../../shared/services/AuthContext';
 import Header from '../../../shared/components/Header';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
+import AutocompleteInput from '../../../shared/components/AutocompleteInput';
+import recentCacheService from '../../../core/services/recentCacheService';
+
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 
+  'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 
+  'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 
+  'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 
+  'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu & Kashmir'
+];
+
+const PRESET_LOCATIONS = [
+  { name: 'Old Delhi', state: 'Delhi', district: 'Delhi', city: 'old delhi' },
+  { name: 'Lucknow', state: 'Uttar Pradesh', district: 'Lucknow', city: 'Lucknow' },
+  { name: 'Madurai', state: 'Tamil Nadu', district: 'Madurai', city: 'Madurai' },
+  { name: 'Kochi', state: 'Kerala', district: 'Ernakulam', city: 'Kochi' }
+];
 
 export const RecipeLocationScreen = ({ navigation }) => {
   const { recipeDraft, saveRecipeDraft } = useAuth();
@@ -23,6 +40,9 @@ export const RecipeLocationScreen = ({ navigation }) => {
   const [gpsError, setGpsError] = useState(null);
   const [gpsAccuracy, setGpsAccuracy] = useState(null);
   const [hasAutoFetched, setHasAutoFetched] = useState(false);
+  const [recentRegions, setRecentRegions] = useState([]);
+  const [recentDistricts, setRecentDistricts] = useState([]);
+  const [recentCities, setRecentCities] = useState([]);
   const [isHydrated, setIsHydrated] = useState(false);
 
   const fetchGPSLocation = useCallback(async () => {
@@ -190,6 +210,12 @@ export const RecipeLocationScreen = ({ navigation }) => {
     }
   }, [recipeDraft, isHydrated, hasAutoFetched, fetchGPSLocation]);
 
+  useEffect(() => {
+    recentCacheService.getRecentItems('regions').then(setRecentRegions);
+    recentCacheService.getRecentItems('districts').then(setRecentDistricts);
+    recentCacheService.getRecentItems('cities').then(setRecentCities);
+  }, []);
+
   const saveCurrentDraft = (silent = true) => {
     const updatedDraft = {
       ...(recipeDraft || {}),
@@ -237,6 +263,9 @@ export const RecipeLocationScreen = ({ navigation }) => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
+      recentCacheService.addRecentItem('regions', region);
+      recentCacheService.addRecentItem('districts', district);
+      recentCacheService.addRecentItem('cities', city);
       saveCurrentDraft(true);
       navigation.navigate('RecipeHeritageSource');
     } else {
@@ -245,7 +274,7 @@ export const RecipeLocationScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Add Recipe" showBack={true} showAvatar={false} />
 
@@ -303,7 +332,7 @@ export const RecipeLocationScreen = ({ navigation }) => {
 
         {/* Form Card */}
         <Card variant="default" style={styles.formCard}>
-          <Input
+          <AutocompleteInput
             label="State / Primary Region *"
             placeholder="e.g. Jammu & Kashmir"
             value={region}
@@ -311,8 +340,26 @@ export const RecipeLocationScreen = ({ navigation }) => {
               setErrors((prev) => ({ ...prev, region: '' }));
               setRegion(text);
             }}
+            suggestions={INDIAN_STATES}
             error={errors.region}
           />
+
+          {recentRegions.length > 0 && (
+            <View style={styles.chipRow}>
+              {recentRegions.map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={styles.suggestionChip}
+                  onPress={() => {
+                    setRegion(item);
+                    setErrors((prev) => ({ ...prev, region: '' }));
+                  }}
+                >
+                  <Text style={styles.suggestionChipText}>🕒 {item}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
           <Input
             label="District *"
@@ -325,6 +372,23 @@ export const RecipeLocationScreen = ({ navigation }) => {
             error={errors.district}
           />
 
+          {recentDistricts.length > 0 && (
+            <View style={styles.chipRow}>
+              {recentDistricts.map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={styles.suggestionChip}
+                  onPress={() => {
+                    setDistrict(item);
+                    setErrors((prev) => ({ ...prev, district: '' }));
+                  }}
+                >
+                  <Text style={styles.suggestionChipText}>🕒 {item}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
           <Input
             label="City / Village *"
             placeholder="e.g. Bijbehara"
@@ -335,6 +399,39 @@ export const RecipeLocationScreen = ({ navigation }) => {
             }}
             error={errors.city}
           />
+
+          {recentCities.length > 0 && (
+            <View style={styles.chipRow}>
+              {recentCities.map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={styles.suggestionChip}
+                  onPress={() => {
+                    setCity(item);
+                    setErrors((prev) => ({ ...prev, city: '' }));
+                  }}
+                >
+                  <Text style={styles.suggestionChipText}>🕒 {item}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          <View style={styles.chipRow}>
+            {PRESET_LOCATIONS.map((loc) => (
+              <TouchableOpacity
+                key={loc.name}
+                style={styles.suggestionChip}
+                onPress={() => {
+                  setRegion(loc.state);
+                  setDistrict(loc.district);
+                  setCity(loc.city);
+                }}
+              >
+                <Text style={styles.suggestionChipText}>📍 {loc.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
           <Input
             label="Country"
@@ -388,7 +485,7 @@ export const RecipeLocationScreen = ({ navigation }) => {
           />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -546,6 +643,26 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     flex: 1,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  suggestionChip: {
+    backgroundColor: '#FAF5EE',
+    borderWidth: 1,
+    borderColor: '#ECE3D7',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  suggestionChipText: {
+    ...FONTS.caption,
+    fontSize: 12,
+    color: COLORS.primary,
   },
 });
 

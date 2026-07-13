@@ -6,6 +6,8 @@ import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../core/theme/theme
 import { useAuth } from '../services/AuthContext';
 import { useConnectionStatus } from '../services/offlineService';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 export const Header = ({
   title,
   showBack = false,
@@ -15,6 +17,7 @@ export const Header = ({
   const navigation = useNavigation();
   const { user, isAuthenticated } = useAuth();
   const isConnected = useConnectionStatus();
+  const insets = useSafeAreaInsets();
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
@@ -24,7 +27,7 @@ export const Header = ({
 
   const handleProfilePress = () => {
     if (isAuthenticated) {
-      navigation.navigate('ProfileSetup');
+      navigation.navigate('Profile');
     } else {
       navigation.navigate('Auth');
     }
@@ -42,7 +45,7 @@ export const Header = ({
   };
 
   return (
-    <View style={styles.outerContainer}>
+    <View style={[styles.outerContainer, { paddingTop: insets.top, backgroundColor: COLORS.background }]}>
       <View style={styles.headerContainer}>
         <View style={styles.leftContainer}>
           {showBack ? (

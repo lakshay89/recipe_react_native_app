@@ -30,6 +30,17 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
     }
   }, [recipeDraft, isHydrated]);
 
+  // Auto calculate total time
+  useEffect(() => {
+    const prep = parseInt(prepTime, 10) || 0;
+    const cook = parseInt(cookTime, 10) || 0;
+    if (prep > 0 || cook > 0) {
+      setTotalTime((prep + cook).toString());
+    } else {
+      setTotalTime('');
+    }
+  }, [prepTime, cookTime]);
+
   const saveCurrentDraft = (silent = true) => {
     // Format instructions list into a single clean string
     const formattedText = cookingSteps
@@ -140,7 +151,51 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
             />
           </View>
 
+          <View style={styles.miniChipRow}>
+            <Text style={styles.miniLabel}>Prep: </Text>
+            {['15', '20', '30', '45', '60'].map((chip) => (
+              <TouchableOpacity
+                key={`prep-${chip}`}
+                style={styles.miniChip}
+                onPress={() => setPrepTime(chip)}
+              >
+                <Text style={styles.miniChipText}>{chip}m</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={[styles.miniChipRow, { marginTop: 4, marginBottom: 12 }]}>
+            <Text style={styles.miniLabel}>Cook: </Text>
+            {['15', '20', '30', '45', '60'].map((chip) => (
+              <TouchableOpacity
+                key={`cook-${chip}`}
+                style={styles.miniChip}
+                onPress={() => setCookTime(chip)}
+              >
+                <Text style={styles.miniChipText}>{chip}m</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
           <View style={styles.separator} />
+
+          {recipeDraft?.title && (recipeDraft.title.toLowerCase().includes('kebab') || recipeDraft.title.toLowerCase().includes('chicken')) && (
+            <TouchableOpacity
+              style={styles.templateBtn}
+              onPress={() => {
+                const suggestedSteps = [
+                  { detail: 'In a bowl, mix minced chicken with chopped onion, ginger-garlic paste, and green chillies.' },
+                  { detail: 'Add garam masala, cumin seeds, salt, and fresh coriander, and marinate for 30 minutes.' },
+                  { detail: 'Shape the mixture onto skewers firmly.' },
+                  { detail: 'Cook on a hot tawa or grill over charcoal heat until golden and fully cooked.' },
+                  { detail: 'Serve hot with lemon wedges and mint chutney.' }
+                ];
+                setCookingSteps(suggestedSteps);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.templateBtnText}>💡 Auto-Fill Steps for "{recipeDraft.title}"</Text>
+            </TouchableOpacity>
+          )}
 
           <Text style={styles.label}>STEP-BY-STEP METHOD *</Text>
 
@@ -189,6 +244,24 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
             multiline={true}
             numberOfLines={2}
           />
+
+          <View style={styles.chipRow}>
+            {['Cook on charcoal', 'Use iron tawa', 'Slow cooking', 'Clay pot cooking'].map((chip) => (
+              <TouchableOpacity
+                key={chip}
+                style={styles.suggestionChip}
+                onPress={() => {
+                  setTraditionalTips((prev) => {
+                    const cleanPrev = prev.trim();
+                    if (!cleanPrev) return chip;
+                    return `${cleanPrev}, ${chip.toLowerCase()}`;
+                  });
+                }}
+              >
+                <Text style={styles.suggestionChipText}>+ {chip}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </Card>
 
         {/* Footer Actions */}
@@ -323,6 +396,67 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     flex: 1,
+  },
+  miniChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: SPACING.xs,
+  },
+  miniLabel: {
+    ...FONTS.caption,
+    fontSize: 11,
+    color: COLORS.textMuted,
+    width: 45,
+  },
+  miniChip: {
+    backgroundColor: '#FAF5EE',
+    borderWidth: 1,
+    borderColor: '#ECE3D7',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  miniChipText: {
+    ...FONTS.caption,
+    fontSize: 10,
+    color: COLORS.primary,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  suggestionChip: {
+    backgroundColor: '#FAF5EE',
+    borderWidth: 1,
+    borderColor: '#ECE3D7',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  suggestionChipText: {
+    ...FONTS.caption,
+    fontSize: 12,
+    color: COLORS.primary,
+  },
+  templateBtn: {
+    backgroundColor: '#F7EDE2',
+    borderWidth: 1.5,
+    borderColor: '#ECE3D7',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: SPACING.md,
+    alignItems: 'center',
+  },
+  templateBtnText: {
+    ...FONTS.bodyBold,
+    fontSize: 13,
+    color: COLORS.primary,
   },
 });
 

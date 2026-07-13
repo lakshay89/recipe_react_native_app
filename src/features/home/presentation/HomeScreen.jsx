@@ -51,7 +51,11 @@ export const HomeScreen = ({ navigation }) => {
         </View>
 
         {/* Hero Banner image matching Google Arts & Culture style */}
-        <View style={styles.heroContainer}>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => navigation.navigate('ExhibitDetails', { exhibitId: 'grand-feasts' })}
+          style={styles.heroContainer}
+        >
           <Image
             source={require('../../../assets/images/thali.png')}
             style={styles.heroImage}
@@ -62,7 +66,7 @@ export const HomeScreen = ({ navigation }) => {
             <Text style={styles.heroTag}>DIGITAL EXHIBIT</Text>
             <Text style={styles.heroTitle}>Grand Feasts of Ancient India</Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Add Your First Recipe CTA */}
         {myRecipes.length === 0 ? (
@@ -96,7 +100,7 @@ export const HomeScreen = ({ navigation }) => {
         )}
 
         {/* Featured Heritage Card with local Forgotten Heritage image */}
-        <Card variant="heritage" style={styles.featuredCard}>
+        <Card variant="heritage" style={styles.featuredCard} onPress={() => navigation.navigate('ExhibitDetails', { exhibitId: 'spice-routes' })}>
           <Image
             source={require('../../../assets/images/chaicup.png')}
             style={styles.featuredImage}
@@ -130,13 +134,25 @@ export const HomeScreen = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.seasonalScroll}
         >
-          {SEASONAL_COLLECTIONS.map((item) => (
-            <Card key={item.id} variant="default" style={styles.seasonalCard}>
-              <Image source={item.image} style={styles.seasonalImage} resizeMode="cover" />
-              <Text style={styles.seasonalCardTitle}>{item.title}</Text>
-              <Text style={styles.seasonalCardDesc} numberOfLines={2}>{item.desc}</Text>
-            </Card>
-          ))}
+          {SEASONAL_COLLECTIONS.map((item) => {
+            const getExhibitId = (id) => {
+              if (id === 's1') return 'grand-feasts';
+              if (id === 's2') return 'royal-kitchens';
+              return 'spice-routes';
+            };
+            return (
+              <Card 
+                key={item.id} 
+                variant="default" 
+                style={styles.seasonalCard}
+                onPress={() => navigation.navigate('ExhibitDetails', { exhibitId: getExhibitId(item.id) })}
+              >
+                <Image source={item.image} style={styles.seasonalImage} resizeMode="cover" />
+                <Text style={styles.seasonalCardTitle}>{item.title}</Text>
+                <Text style={styles.seasonalCardDesc} numberOfLines={2}>{item.desc}</Text>
+              </Card>
+            );
+          })}
         </ScrollView>
 
       </ScrollView>

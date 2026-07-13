@@ -6,6 +6,7 @@ import Header from '../../../shared/components/Header';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
+import AutocompleteInput from '../../../shared/components/AutocompleteInput';
 
 const SOURCE_OPTIONS = [
   'Grandmother → Mother → Me',
@@ -154,29 +155,32 @@ export const RecipeHeritageSourceScreen = ({ navigation }) => {
             error={errors.history}
           />
 
-          <Input
+          <AutocompleteInput
             label="Who Taught / Passed This Recipe to You?"
             placeholder="e.g. My maternal grandmother, Nani-jaan"
             value={whoTaughtYou}
             onChangeText={setWhoTaughtYou}
+            suggestions={['Grandmother', 'Mother', 'Community Elder', 'Village Cook', 'Temple Priest']}
           />
 
           <View style={styles.numberRow}>
-            <Input
+            <AutocompleteInput
               label="Generations Preserved"
               placeholder="e.g. 3"
               value={numGenerations}
               onChangeText={setNumGenerations}
               keyboardType="number-pad"
+              suggestions={['2', '3', '4', '5']}
               style={styles.numberInput}
             />
 
-            <Input
+            <AutocompleteInput
               label="Approx. Age (Years)"
               placeholder="e.g. 120"
               value={approxAge}
               onChangeText={setApproxAge}
               keyboardType="number-pad"
+              suggestions={['50', '75', '100', '150', '200']}
               style={styles.numberInput}
             />
           </View>

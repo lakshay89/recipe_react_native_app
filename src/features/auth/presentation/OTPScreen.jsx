@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, Alert, Platform, Image } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, Alert, Platform, Image } from 'react-native';
 import { COLORS, FONTS, SPACING, SHADOWS } from '../../../core/theme/theme';
 import { useAuth } from '../../../shared/services/AuthContext';
 import Input from '../../../shared/components/Input';
@@ -57,7 +57,7 @@ export const OTPScreen = ({ route, navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Verification" showBack={true} showAvatar={false} />
 
@@ -109,7 +109,7 @@ export const OTPScreen = ({ route, navigation }) => {
           />
         </Card>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

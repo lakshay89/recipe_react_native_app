@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
 import { COLORS, FONTS, SPACING, SHADOWS } from '../../../core/theme/theme';
 import Header from '../../../shared/components/Header';
 import Card from '../../../shared/components/Card';
@@ -12,10 +12,11 @@ export const ForgotPasswordScreen = ({ navigation }) => {
 
   const handleSendCode = () => {
     if (!identifier.trim()) {
-      setError('Mobile Number or Email is required');
+      setError('Please enter your email or mobile number');
       return;
     }
-
+    setError('');
+    // Navigate to OTP for verification code validation flow
     navigation.navigate('OTP', {
       authData: { identifier, isSignUp: false },
       flow: 'forgot_password',
@@ -23,12 +24,12 @@ export const ForgotPasswordScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Recovery" showBack={true} showAvatar={false} />
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
@@ -45,16 +46,17 @@ export const ForgotPasswordScreen = ({ navigation }) => {
             </Text>
           </View>
 
-          <Card variant="default" style={styles.card}>
+          <Card variant="heritage" style={styles.formCard}>
             <Input
-              label="Mobile Number or Email"
-              placeholder="guardian@archives.in"
+              label="Email Address / Mobile Number"
+              placeholder="e.g. aditya@gmail.com"
               value={identifier}
               onChangeText={(text) => {
                 setError('');
                 setIdentifier(text);
               }}
               error={error}
+              autoCapitalize="none"
               keyboardType="email-address"
             />
 
@@ -67,7 +69,7 @@ export const ForgotPasswordScreen = ({ navigation }) => {
           </Card>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 

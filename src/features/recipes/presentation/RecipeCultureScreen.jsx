@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { COLORS, FONTS, SPACING, SHADOWS } from '../../../core/theme/theme';
 import { useAuth } from '../../../shared/services/AuthContext';
 import Header from '../../../shared/components/Header';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
+import AutocompleteInput from '../../../shared/components/AutocompleteInput';
+import { FESTIVALS_BY_STATE } from '../../../core/data/festivalsByState';
+import { COOKING_EQUIPMENT } from '../../../core/data/cookingEquipment';
+import recentCacheService from '../../../core/services/recentCacheService';
 
 export const RecipeCultureScreen = ({ navigation }) => {
   const { recipeDraft, saveRecipeDraft } = useAuth();
@@ -19,6 +23,7 @@ export const RecipeCultureScreen = ({ navigation }) => {
   const [cookingVessel, setCookingVessel] = useState('');
   const [cookingMedium, setCookingMedium] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
+  const [recentVessels, setRecentVessels] = useState([]);
 
   useEffect(() => {
     if (recipeDraft && !isHydrated) {
@@ -33,6 +38,10 @@ export const RecipeCultureScreen = ({ navigation }) => {
       setIsHydrated(true);
     }
   }, [recipeDraft, isHydrated]);
+
+  useEffect(() => {
+    recentCacheService.getRecentItems('cooking_vessels').then(setRecentVessels);
+  }, []);
 
   const saveCurrentDraft = (silent = true) => {
     const updatedDraft = {
@@ -61,9 +70,17 @@ export const RecipeCultureScreen = ({ navigation }) => {
   };
 
   const handleNext = () => {
+    if (cookingVessel.trim()) {
+      recentCacheService.addRecentItem('cooking_vessels', cookingVessel);
+    }
     saveCurrentDraft(true);
     navigation.navigate('RecipeMediaUpload');
   };
+
+  // Get festival suggestions based on selected state in Step 2
+  const stateSelected = recipeDraft?.region || '';
+  const festivalSuggestions = FESTIVALS_BY_STATE[stateSelected] || 
+    Array.from(new Set(Object.values(FESTIVALS_BY_STATE).flat()));
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -87,11 +104,12 @@ export const RecipeCultureScreen = ({ navigation }) => {
 
         {/* Form Card */}
         <Card variant="default" style={styles.formCard}>
-          <Input
+          <AutocompleteInput
             label="Associated Festival / Occasion"
             placeholder="e.g. Maha Shivratri, Eid-ul-Fitr"
             value={festival}
             onChangeText={setFestival}
+            suggestions={festivalSuggestions}
           />
 
           <Input
@@ -100,6 +118,17 @@ export const RecipeCultureScreen = ({ navigation }) => {
             value={season}
             onChangeText={setSeason}
           />
+          <View style={styles.chipRow}>
+            {['Summer', 'Winter', 'Monsoon', 'Spring', 'All Season'].map((chip) => (
+              <TouchableOpacity
+                key={chip}
+                style={styles.suggestionChip}
+                onPress={() => setSeason(chip)}
+              >
+                <Text style={styles.suggestionChipText}>🍂 {chip}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
           <Input
             label="Community / Origin Group"
@@ -121,6 +150,17 @@ export const RecipeCultureScreen = ({ navigation }) => {
             value={dietType}
             onChangeText={setDietType}
           />
+          <View style={styles.chipRow}>
+            {['Vegetarian', 'Non Vegetarian', 'Vegan', 'Eggetarian', 'Jain'].map((chip) => (
+              <TouchableOpacity
+                key={chip}
+                style={styles.suggestionChip}
+                onPress={() => setDietType(chip)}
+              >
+                <Text style={styles.suggestionChipText}>🥬 {chip}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
           <Input
             label="Rarity Status"
@@ -128,13 +168,39 @@ export const RecipeCultureScreen = ({ navigation }) => {
             value={rarityStatus}
             onChangeText={setRarityStatus}
           />
+          <View style={styles.chipRow}>
+            {['Common', 'Rare', 'Nearly Forgotten', 'Extinct', 'Revived'].map((chip) => (
+              <TouchableOpacity
+                key={chip}
+                style={styles.suggestionChip}
+                onPress={() => setRarityStatus(chip)}
+              >
+                <Text style={styles.suggestionChipText}>⭐ {chip}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-          <Input
+          <AutocompleteInput
             label="Traditional Cooking Vessel"
             placeholder="e.g. Clay Pot (Deg), Copper Handi"
             value={cookingVessel}
             onChangeText={setCookingVessel}
+            suggestions={COOKING_EQUIPMENT}
           />
+
+          {recentVessels.length > 0 && (
+            <View style={styles.chipRow}>
+              {recentVessels.map((v) => (
+                <TouchableOpacity
+                  key={v}
+                  style={styles.suggestionChip}
+                  onPress={() => setCookingVessel(v)}
+                >
+                  <Text style={styles.suggestionChipText}>🕒 {v}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
           <Input
             label="Traditional Cooking Medium"
@@ -142,6 +208,17 @@ export const RecipeCultureScreen = ({ navigation }) => {
             value={cookingMedium}
             onChangeText={setCookingMedium}
           />
+          <View style={styles.chipRow}>
+            {['Wood Fire', 'Charcoal', 'Direct Flame', 'Clay Oven', 'Steam', 'Radiant Heat'].map((chip) => (
+              <TouchableOpacity
+                key={chip}
+                style={styles.suggestionChip}
+                onPress={() => setCookingMedium(chip)}
+              >
+                <Text style={styles.suggestionChipText}>🔥 {chip}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </Card>
 
         {/* Footer Actions */}
@@ -221,6 +298,26 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     flex: 1,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  suggestionChip: {
+    backgroundColor: '#FAF5EE',
+    borderWidth: 1,
+    borderColor: '#ECE3D7',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  suggestionChipText: {
+    ...FONTS.caption,
+    fontSize: 12,
+    color: COLORS.primary,
   },
 });
 

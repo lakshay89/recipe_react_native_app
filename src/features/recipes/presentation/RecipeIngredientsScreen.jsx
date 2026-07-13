@@ -7,6 +7,9 @@ import Header from '../../../shared/components/Header';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
+import AutocompleteInput from '../../../shared/components/AutocompleteInput';
+import { INGREDIENTS } from '../../../core/data/ingredientsData';
+import recentCacheService from '../../../core/services/recentCacheService';
 
 const UNIT_CATEGORIES = [
   {
@@ -43,6 +46,7 @@ export const RecipeIngredientsScreen = ({ navigation }) => {
   const [dropdownQuery, setDropdownQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [recentIngredients, setRecentIngredients] = useState([]);
 
   useEffect(() => {
     if (recipeDraft && !isHydrated) {
@@ -55,6 +59,10 @@ export const RecipeIngredientsScreen = ({ navigation }) => {
       setIsHydrated(true);
     }
   }, [recipeDraft, isHydrated]);
+
+  useEffect(() => {
+    recentCacheService.getRecentItems('ingredients').then(setRecentIngredients);
+  }, []);
 
   const saveCurrentDraft = (silent = true) => {
     // Also build a formatted string representing the ingredient details
@@ -112,6 +120,18 @@ export const RecipeIngredientsScreen = ({ navigation }) => {
     setActiveDropdownIndex(null);
   };
 
+  const handleSelectRecentIngredient = (name) => {
+    // If the last ingredient row is empty, populate it. Otherwise add a new row.
+    const lastIng = ingredients[ingredients.length - 1];
+    if (ingredients.length === 1 && !lastIng.name.trim() && !lastIng.quantity && !lastIng.unit && !lastIng.notes) {
+      const updated = [...ingredients];
+      updated[0].name = name;
+      setIngredients(updated);
+    } else {
+      setIngredients([...ingredients, { name, quantity: '', unit: '', notes: '' }]);
+    }
+  };
+
   const handleNext = () => {
     // Validate ingredients list
     const validIngredients = ingredients.filter((ing) => ing.name.trim());
@@ -120,9 +140,20 @@ export const RecipeIngredientsScreen = ({ navigation }) => {
       return;
     }
 
+    validIngredients.forEach((ing) => {
+      recentCacheService.addRecentItem('ingredients', ing.name);
+    });
+
     saveCurrentDraft(true);
     navigation.navigate('RecipeCookingMethod');
   };
+
+  const activeIngName = activeDropdownIndex !== null ? (ingredients[activeDropdownIndex]?.name || '') : '';
+  const matchedIng = INGREDIENTS.find(
+    (ing) => ing.name.toLowerCase() === activeIngName.toLowerCase() ||
+             (ing.aliases && ing.aliases.some(alias => alias.toLowerCase() === activeIngName.toLowerCase()))
+  );
+  const recommendedUnits = matchedIng ? matchedIng.recommendedUnits : [];
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -156,6 +187,45 @@ export const RecipeIngredientsScreen = ({ navigation }) => {
 
           <View style={styles.separator} />
           
+          {recipeDraft?.title && (recipeDraft.title.toLowerCase().includes('kebab') || recipeDraft.title.toLowerCase().includes('chicken')) && (
+            <TouchableOpacity
+              style={styles.templateBtn}
+              onPress={() => {
+                const suggested = [
+                  { name: 'Chicken', quantity: '500', unit: 'Gram (g)', notes: 'minced' },
+                  { name: 'Onion', quantity: '1', unit: 'Piece', notes: 'finely chopped' },
+                  { name: 'Ginger', quantity: '1', unit: 'Teaspoon (tsp)', notes: 'paste' },
+                  { name: 'Garlic', quantity: '1', unit: 'Teaspoon (tsp)', notes: 'paste' },
+                  { name: 'Green Chilli', quantity: '2', unit: 'Piece', notes: 'chopped' },
+                  { name: 'Fresh Coriander', quantity: '2', unit: 'Tablespoon (tbsp)', notes: 'chopped' },
+                  { name: 'Garam Masala', quantity: '1', unit: 'Teaspoon (tsp)', notes: '' },
+                  { name: 'Cumin Seeds', quantity: '1', unit: 'Teaspoon (tsp)', notes: 'powder' }
+                ];
+                setIngredients(suggested);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.templateBtnText}>💡 Auto-Fill Ingredients for "{recipeDraft.title}"</Text>
+            </TouchableOpacity>
+          )}
+
+          {recentIngredients.length > 0 && (
+            <View style={{ marginBottom: 12 }}>
+              <Text style={styles.dropdownLabel}>Recent Ingredients</Text>
+              <View style={styles.miniChipRow}>
+                {recentIngredients.map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    style={styles.miniChip}
+                    onPress={() => handleSelectRecentIngredient(item)}
+                  >
+                    <Text style={styles.miniChipText}>+ {item}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
           <Text style={styles.label}>INGREDIENTS DETAILS *</Text>
 
           {/* Dynamic rows */}
@@ -174,22 +244,36 @@ export const RecipeIngredientsScreen = ({ navigation }) => {
                 )}
               </View>
 
-              <Input
+              <AutocompleteInput
                 label="Ingredient Name *"
                 placeholder="e.g. Mustard seeds"
                 value={item.name}
                 onChangeText={(val) => handleFieldChange(index, 'name', val)}
+                suggestions={INGREDIENTS}
                 style={styles.fieldCompact}
               />
 
               <View style={styles.proportionRow}>
-                <Input
-                  label="Quantity"
-                  placeholder="e.g. 2"
-                  value={item.quantity}
-                  onChangeText={(val) => handleFieldChange(index, 'quantity', val)}
-                  style={styles.propInput}
-                />
+                <View style={styles.propInput}>
+                  <Input
+                    label="Quantity"
+                    placeholder="e.g. 2"
+                    value={item.quantity}
+                    onChangeText={(val) => handleFieldChange(index, 'quantity', val)}
+                    style={styles.fieldCompact}
+                  />
+                  <View style={styles.miniChipRow}>
+                    {['1', '100', '250', '500'].map((chip) => (
+                      <TouchableOpacity
+                        key={chip}
+                        style={styles.miniChip}
+                        onPress={() => handleFieldChange(index, 'quantity', chip)}
+                      >
+                        <Text style={styles.miniChipText}>{chip}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
                 
                 {/* Searchable Unit Dropdown Trigger */}
                 <View style={styles.propInput}>
@@ -214,6 +298,17 @@ export const RecipeIngredientsScreen = ({ navigation }) => {
                 onChangeText={(val) => handleFieldChange(index, 'notes', val)}
                 style={styles.fieldCompact}
               />
+              <View style={styles.miniChipRow}>
+                {['chopped', 'minced', 'cubed', 'sliced', 'soaked'].map((chip) => (
+                  <TouchableOpacity
+                    key={chip}
+                    style={styles.miniChip}
+                    onPress={() => handleFieldChange(index, 'notes', chip)}
+                  >
+                    <Text style={styles.miniChipText}>+ {chip}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           ))}
 
@@ -274,6 +369,24 @@ export const RecipeIngredientsScreen = ({ navigation }) => {
 
             {/* Scrollable list of units */}
             <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
+              {recommendedUnits.length > 0 && !dropdownQuery && (
+                <View style={styles.categoryBlock}>
+                  <Text style={[styles.categoryTitle, { color: COLORS.primary }]}>RECOMMENDED UNITS</Text>
+                  <View style={styles.optionsList}>
+                    {recommendedUnits.map(unit => (
+                      <TouchableOpacity
+                        key={`rec-${unit}`}
+                        style={styles.optionItem}
+                        onPress={() => handleSelectUnit(unit)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.optionText, { fontWeight: '700', color: COLORS.secondary }]}>{unit}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+
               {UNIT_CATEGORIES.map(category => {
                 const matchedItems = category.items.filter(unit =>
                   unit.toLowerCase().includes(dropdownQuery.toLowerCase())
@@ -527,6 +640,41 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     flex: 1,
+  },
+  miniChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
+    marginBottom: 10,
+  },
+  miniChip: {
+    backgroundColor: '#FAF5EE',
+    borderWidth: 1,
+    borderColor: '#ECE3D7',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  miniChipText: {
+    ...FONTS.caption,
+    fontSize: 10,
+    color: COLORS.primary,
+  },
+  templateBtn: {
+    backgroundColor: '#F7EDE2',
+    borderWidth: 1.5,
+    borderColor: '#ECE3D7',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: SPACING.md,
+    alignItems: 'center',
+  },
+  templateBtnText: {
+    ...FONTS.bodyBold,
+    fontSize: 13,
+    color: COLORS.primary,
   },
 });
 

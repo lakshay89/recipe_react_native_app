@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, StatusBar } from 'react-native';
 import { CheckCircle } from 'lucide-react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import Header from '../../../shared/components/Header';
@@ -16,7 +16,7 @@ export const RecipeSubmitSuccessScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#FBF7F1" />
       <Header title="Archived Successfully" showBack={false} showAvatar={false} />
 
@@ -33,19 +33,20 @@ export const RecipeSubmitSuccessScreen = ({ navigation }) => {
             Your regional recipe has been submitted for administrative review and cataloging.
           </Text>
 
-          {/* Pending Status Badge */}
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusLabel}>STATUS: PENDING REVIEW</Text>
+          <View style={styles.divider} />
+
+          {/* Guidelines info */}
+          <View style={styles.infoBox}>
+            <Text style={styles.infoTitle}>⏳ Curation Review Process</Text>
+            <Text style={styles.infoText}>
+              Submissions are reviewed by our regional editors. You will receive an archive notification once validation is complete.
+            </Text>
           </View>
 
-          <Text style={styles.desc}>
-            Once verified by our culinary historians, the contribution will be pinned to the public India Heritage Map.
-          </Text>
-
-          {/* Action buttons */}
-          <View style={styles.btnRow}>
+          {/* Action Row */}
+          <View style={styles.buttonRow}>
             <Button
-              title="View Pending Submissions"
+              title="View Submissions"
               variant="outline"
               onPress={handleGoToPending}
               style={styles.actionBtn}
@@ -59,7 +60,7 @@ export const RecipeSubmitSuccessScreen = ({ navigation }) => {
           </View>
         </Card>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

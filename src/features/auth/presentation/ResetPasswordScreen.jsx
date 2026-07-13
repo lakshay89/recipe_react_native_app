@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, KeyboardAvoidingView, Platform, ScrollView, Alert, Image } from 'react-native';
 import { COLORS, FONTS, SPACING, SHADOWS } from '../../../core/theme/theme';
 import Header from '../../../shared/components/Header';
 import Card from '../../../shared/components/Card';
@@ -33,7 +33,7 @@ export const ResetPasswordScreen = ({ navigation }) => {
         'Your password has been updated. Please login with your new password.',
         [
           {
-            text: 'Go to Login',
+            text: 'OK',
             onPress: () => navigation.replace('Auth'),
           },
         ]
@@ -42,12 +42,12 @@ export const ResetPasswordScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Security" showBack={false} showAvatar={false} />
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
@@ -60,14 +60,14 @@ export const ResetPasswordScreen = ({ navigation }) => {
             <Text style={styles.portalTag}>ACCOUNT SECURITY</Text>
             <Text style={styles.title}>Define New Password</Text>
             <Text style={styles.description}>
-              Create a secure password to protect your contributor account credentials.
+              Enter a secure password for your Edible India contributor account.
             </Text>
           </View>
 
-          <Card variant="default" style={styles.card}>
+          <Card variant="heritage" style={styles.formCard}>
             <Input
               label="New Password"
-              placeholder="Minimum 6 characters"
+              placeholder="Min 6 characters..."
               value={password}
               onChangeText={(text) => {
                 setErrors((prev) => ({ ...prev, password: '' }));
@@ -78,8 +78,8 @@ export const ResetPasswordScreen = ({ navigation }) => {
             />
 
             <Input
-              label="Confirm New Password"
-              placeholder="Re-enter your new password"
+              label="Confirm Password"
+              placeholder="Re-enter password..."
               value={confirmPassword}
               onChangeText={(text) => {
                 setErrors((prev) => ({ ...prev, confirmPassword: '' }));
@@ -90,7 +90,7 @@ export const ResetPasswordScreen = ({ navigation }) => {
             />
 
             <Button
-              title="Save & Update Password"
+              title="Reset Password & Login"
               variant="primary"
               onPress={handleReset}
               style={styles.resetBtn}
@@ -98,7 +98,7 @@ export const ResetPasswordScreen = ({ navigation }) => {
           </Card>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 

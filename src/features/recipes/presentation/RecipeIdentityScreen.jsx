@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import { useAuth } from '../../../shared/services/AuthContext';
 import Header from '../../../shared/components/Header';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
+import AutocompleteInput from '../../../shared/components/AutocompleteInput';
+import recentCacheService from '../../../core/services/recentCacheService';
 
 export const RecipeIdentityScreen = ({ navigation }) => {
   const { recipeDraft, saveRecipeDraft } = useAuth();
@@ -13,9 +15,9 @@ export const RecipeIdentityScreen = ({ navigation }) => {
   const [title, setTitle] = useState('');
   const [localName, setLocalName] = useState('');
   const [nativeScript, setNativeScript] = useState('');
-  const [englishName, setEnglishName] = useState('');
   const [altNames, setAltNames] = useState('');
   const [history, setHistory] = useState(''); // description/history
+  const [recentRecipes, setRecentRecipes] = useState([]);
   
   const [errors, setErrors] = useState({});
 
@@ -25,11 +27,15 @@ export const RecipeIdentityScreen = ({ navigation }) => {
       setTitle(recipeDraft.title || '');
       setLocalName(recipeDraft.localName || '');
       setNativeScript(recipeDraft.nativeScript || '');
-      setEnglishName(recipeDraft.englishName || '');
       setAltNames(recipeDraft.altNames || '');
       setHistory(recipeDraft.history || '');
     }
   }, [recipeDraft]);
+
+  // Load recent entries
+  useEffect(() => {
+    recentCacheService.getRecentItems('recipe_names').then(setRecentRecipes);
+  }, []);
 
   const saveCurrentDraft = (silent = true) => {
     const updatedDraft = {
@@ -37,7 +43,6 @@ export const RecipeIdentityScreen = ({ navigation }) => {
       title,
       localName,
       nativeScript,
-      englishName,
       altNames,
       history,
     };
@@ -60,6 +65,7 @@ export const RecipeIdentityScreen = ({ navigation }) => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
+      recentCacheService.addRecentItem('recipe_names', title);
       saveCurrentDraft(true);
       navigation.navigate('RecipeLocation');
     } else {
@@ -68,7 +74,7 @@ export const RecipeIdentityScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Add Recipe" showBack={true} showAvatar={false} />
 
@@ -89,7 +95,7 @@ export const RecipeIdentityScreen = ({ navigation }) => {
 
         {/* Form Card */}
         <Card variant="default" style={styles.formCard}>
-          <Input
+          <AutocompleteInput
             label="Recipe Name (English) *"
             placeholder="e.g. Kashmiri Dum Aloo"
             value={title}
@@ -97,8 +103,31 @@ export const RecipeIdentityScreen = ({ navigation }) => {
               setErrors((prev) => ({ ...prev, title: '' }));
               setTitle(text);
             }}
+            suggestions={[
+              'Chicken Seekh Kebab', 'Dal Bati', 'Pongal', 'Rogan Josh', 
+              'Dum Aloo', 'Biryani', 'Masala Dosa', 'Butter Chicken', 
+              'Tandoori Chicken', 'Dhokla', 'Vada Pav', 'Samosa', 
+              'Chole Bhature', 'Idli'
+            ]}
             error={errors.title}
           />
+
+          {recentRecipes.length > 0 && (
+            <View style={styles.chipRow}>
+              {recentRecipes.map((r) => (
+                <TouchableOpacity
+                  key={r}
+                  style={styles.suggestionChip}
+                  onPress={() => {
+                    setTitle(r);
+                    setErrors((prev) => ({ ...prev, title: '' }));
+                  }}
+                >
+                  <Text style={styles.suggestionChipText}>🕒 {r}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
           <Input
             label="Local Regional Name"
@@ -134,12 +163,33 @@ export const RecipeIdentityScreen = ({ navigation }) => {
             error={errors.history}
           />
 
+          <View style={styles.chipRow}>
+            {['Traditional Family Recipe', 'Festival Dish', 'Temple Offering', 'Community Speciality'].map((chip) => (
+              <TouchableOpacity
+                key={chip}
+                style={styles.suggestionChip}
+                onPress={() => {
+                  setHistory((prev) => {
+                    const cleanPrev = prev.trim();
+                    if (!cleanPrev) return chip;
+                    if (cleanPrev.endsWith('.') || cleanPrev.endsWith('!')) {
+                      return `${cleanPrev} This is a ${chip.toLowerCase()}.`;
+                    }
+                    return `${cleanPrev}, ${chip.toLowerCase()}`;
+                  });
+                }}
+              >
+                <Text style={styles.suggestionChipText}>+ {chip}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
           {/* Audio Pronunciation Placeholder */}
-          <View style={styles.audioPlaceholder}>
+          {/* <View style={styles.audioPlaceholder}>
             <Text style={styles.audioIcon}>🎙</Text>
             <Text style={styles.audioLabel}>Native Pronunciation Recording</Text>
             <Text style={styles.audioDesc}>(Record pronunciation helper in regional dialect)</Text>
-          </View>
+          </View> */}
         </Card>
 
         {/* Footer Actions */}
@@ -158,7 +208,7 @@ export const RecipeIdentityScreen = ({ navigation }) => {
           />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -243,6 +293,26 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     flex: 1,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  suggestionChip: {
+    backgroundColor: '#FAF5EE',
+    borderWidth: 1,
+    borderColor: '#ECE3D7',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  suggestionChipText: {
+    ...FONTS.caption,
+    fontSize: 12,
+    color: COLORS.primary,
   },
 });
 

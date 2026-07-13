@@ -29,7 +29,6 @@ export const EditRecipeScreen = ({ route, navigation }) => {
   const [title, setTitle] = useState('');
   const [localName, setLocalName] = useState('');
   const [nativeScript, setNativeScript] = useState('');
-  const [englishName, setEnglishName] = useState('');
   const [altNames, setAltNames] = useState('');
   const [history, setHistory] = useState('');
   
@@ -70,7 +69,6 @@ export const EditRecipeScreen = ({ route, navigation }) => {
       setTitle(recipe.title || '');
       setLocalName(recipe.localName || '');
       setNativeScript(recipe.nativeScript || '');
-      setEnglishName(recipe.englishName || '');
       setAltNames(recipe.altNames || '');
       setHistory(recipe.history || '');
 
@@ -135,7 +133,6 @@ export const EditRecipeScreen = ({ route, navigation }) => {
       title,
       localName,
       nativeScript,
-      englishName,
       altNames,
       history,
       region,
@@ -255,11 +252,6 @@ export const EditRecipeScreen = ({ route, navigation }) => {
             label="Native Script Script Name"
             value={nativeScript}
             onChangeText={setNativeScript}
-          />
-          <Input
-            label="English Translation Name"
-            value={englishName}
-            onChangeText={setEnglishName}
           />
           <Input
             label="Alternative Dialect Names"

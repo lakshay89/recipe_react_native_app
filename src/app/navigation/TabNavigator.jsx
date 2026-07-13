@@ -20,8 +20,11 @@ const RenderSearchIcon = ({ color }) => <Search size={22} color={color} strokeWi
 const RenderAddIcon = ({ color }) => <BookPlus size={22} color={color} strokeWidth={2.2} />;
 const RenderArchiveIcon = ({ color }) => <Archive size={22} color={color} strokeWidth={2.2} />;
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 export const TabNavigator = () => {
   const { isAuthenticated } = useAuth();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -29,7 +32,10 @@ export const TabNavigator = () => {
         headerShown: false,
         tabBarActiveTintColor: COLORS.secondary, // Deep Forest Green active icon/label
         tabBarInactiveTintColor: COLORS.textMuted, // Muted inactive icon/label
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          styles.tabBar,
+          { bottom: insets.bottom > 0 ? insets.bottom + 4 : 14 }
+        ],
         tabBarLabelStyle: styles.tabBarLabel,
         tabBarHideOnKeyboard: true,
       }}
