@@ -7,8 +7,8 @@ import Header from '../../../shared/components/Header';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
-import AutocompleteInput from '../../../shared/components/AutocompleteInput';
-import { INGREDIENTS } from '../../../core/data/ingredientsData';
+import MasterAutocompleteInput from '../../../shared/components/MasterAutocompleteInput';
+import { getAllIngredients, addCustomIngredient } from '../services/masterIngredientService';
 import recentCacheService from '../../../core/services/recentCacheService';
 
 const UNIT_CATEGORIES = [
@@ -47,6 +47,11 @@ export const RecipeIngredientsScreen = ({ navigation }) => {
   const [showModal, setShowModal] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [recentIngredients, setRecentIngredients] = useState([]);
+  const [allIngredients, setAllIngredients] = useState([]);
+
+  useEffect(() => {
+    getAllIngredients().then(setAllIngredients);
+  }, []);
 
   useEffect(() => {
     if (recipeDraft && !isHydrated) {
@@ -140,8 +145,12 @@ export const RecipeIngredientsScreen = ({ navigation }) => {
       return;
     }
 
+    // Auto-save any new ingredients to the custom store
     validIngredients.forEach((ing) => {
       recentCacheService.addRecentItem('ingredients', ing.name);
+      addCustomIngredient(ing.name).catch((err) =>
+        console.error('Failed to auto-persist custom ingredient', err)
+      );
     });
 
     saveCurrentDraft(true);
@@ -149,7 +158,7 @@ export const RecipeIngredientsScreen = ({ navigation }) => {
   };
 
   const activeIngName = activeDropdownIndex !== null ? (ingredients[activeDropdownIndex]?.name || '') : '';
-  const matchedIng = INGREDIENTS.find(
+  const matchedIng = allIngredients.find(
     (ing) => ing.name.toLowerCase() === activeIngName.toLowerCase() ||
              (ing.aliases && ing.aliases.some(alias => alias.toLowerCase() === activeIngName.toLowerCase()))
   );
@@ -244,13 +253,17 @@ export const RecipeIngredientsScreen = ({ navigation }) => {
                 )}
               </View>
 
-              <AutocompleteInput
+              <MasterAutocompleteInput
                 label="Ingredient Name *"
                 placeholder="e.g. Mustard seeds"
                 value={item.name}
-                onChangeText={(val) => handleFieldChange(index, 'name', val)}
-                suggestions={INGREDIENTS}
-                style={styles.fieldCompact}
+                onChangeText={(val) => {
+                  handleFieldChange(index, 'name', val);
+                  getAllIngredients().then(setAllIngredients);
+                }}
+                onSelect={(selectedItem) => {
+                  handleFieldChange(index, 'name', selectedItem.name);
+                }}
               />
 
               <View style={styles.proportionRow}>

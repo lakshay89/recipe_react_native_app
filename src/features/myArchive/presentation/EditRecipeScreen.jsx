@@ -50,7 +50,8 @@ export const EditRecipeScreen = ({ route, navigation }) => {
   const [prepTime, setPrepTime] = useState('');
   const [cookTime, setCookTime] = useState('');
   const [totalTime, setTotalTime] = useState('');
-  const [instructionsText, setInstructionsText] = useState('');
+  const [prepStepsText, setPrepStepsText] = useState('');
+  const [cookingStepsText, setCookingStepsText] = useState('');
   const [traditionalTips, setTraditionalTips] = useState('');
 
   const [festival, setFestival] = useState('');
@@ -61,6 +62,7 @@ export const EditRecipeScreen = ({ route, navigation }) => {
   const [rarityStatus, setRarityStatus] = useState('');
   const [cookingVessel, setCookingVessel] = useState('');
   const [cookingMedium, setCookingMedium] = useState('');
+  const [heatSource, setHeatSource] = useState('');
 
   const [errors, setErrors] = useState({});
 
@@ -90,7 +92,16 @@ export const EditRecipeScreen = ({ route, navigation }) => {
       setPrepTime(recipe.prepTime ? String(recipe.prepTime) : '');
       setCookTime(recipe.cookTime ? String(recipe.cookTime) : '');
       setTotalTime(recipe.totalTime ? String(recipe.totalTime) : '');
-      setInstructionsText(recipe.instructions || '');
+      if (recipe.prepStepsList && recipe.prepStepsList.length > 0) {
+        setPrepStepsText(recipe.prepStepsList.map((s) => s.detail).join('\n'));
+      } else {
+        setPrepStepsText('');
+      }
+      if (recipe.cookingStepsList && recipe.cookingStepsList.length > 0) {
+        setCookingStepsText(recipe.cookingStepsList.map((s) => s.detail).join('\n'));
+      } else {
+        setCookingStepsText(recipe.instructions || '');
+      }
       setTraditionalTips(recipe.traditionalTips || '');
 
       setFestival(recipe.festival || '');
@@ -101,6 +112,7 @@ export const EditRecipeScreen = ({ route, navigation }) => {
       setRarityStatus(recipe.rarityStatus || '');
       setCookingVessel(recipe.cookingVessel || '');
       setCookingMedium(recipe.cookingMedium || '');
+      setHeatSource(recipe.heatSource || '');
     }
   }, [recipe]);
 
@@ -129,6 +141,21 @@ export const EditRecipeScreen = ({ route, navigation }) => {
       return;
     }
 
+    const prepStepsList = prepStepsText
+      .split('\n')
+      .filter((line) => line.trim())
+      .map((line) => ({ detail: line.trim() }));
+
+    const cookingStepsList = cookingStepsText
+      .split('\n')
+      .filter((line) => line.trim())
+      .map((line) => ({ detail: line.trim() }));
+
+    const combinedText = [
+      prepStepsText.trim() ? `[Preparation Steps]\n${prepStepsText.trim()}` : '',
+      cookingStepsText.trim() ? `[Cooking Steps]\n${cookingStepsText.trim()}` : '',
+    ].filter(Boolean).join('\n\n');
+
     const fieldsPayload = {
       title,
       localName,
@@ -150,7 +177,9 @@ export const EditRecipeScreen = ({ route, navigation }) => {
       prepTime: prepTime ? parseInt(prepTime, 10) : '',
       cookTime: cookTime ? parseInt(cookTime, 10) : '',
       totalTime: totalTime ? parseInt(totalTime, 10) : '',
-      instructions: instructionsText,
+      instructions: combinedText,
+      prepStepsList,
+      cookingStepsList,
       traditionalTips,
       festival,
       season,
@@ -160,6 +189,7 @@ export const EditRecipeScreen = ({ route, navigation }) => {
       rarityStatus,
       cookingVessel,
       cookingMedium,
+      heatSource,
     };
 
     // Enforce business logic on edit targets
@@ -168,7 +198,8 @@ export const EditRecipeScreen = ({ route, navigation }) => {
         ...recipe,
         ...fieldsPayload,
         ingredientsList: recipe.ingredientsList || [],
-        cookingStepsList: recipe.cookingStepsList || [],
+        prepStepsList: fieldsPayload.prepStepsList,
+        cookingStepsList: fieldsPayload.cookingStepsList,
       };
       recipeDraftService.saveDraft(updatedDraft, recipe.currentStep || 'RecipeIdentity').then(() => {
         Alert.alert(
@@ -390,11 +421,20 @@ export const EditRecipeScreen = ({ route, navigation }) => {
             />
           </View>
           <Input
-            label="Instructions Method Steps (One step per line)"
-            value={instructionsText}
-            onChangeText={setInstructionsText}
+            label="Preparation Steps (One step per line)"
+            placeholder="e.g. Wash and chop onions..."
+            value={prepStepsText}
+            onChangeText={setPrepStepsText}
             multiline={true}
-            numberOfLines={5}
+            numberOfLines={4}
+          />
+          <Input
+            label="Cooking Steps (One step per line)"
+            placeholder="e.g. Cook on slow heat..."
+            value={cookingStepsText}
+            onChangeText={setCookingStepsText}
+            multiline={true}
+            numberOfLines={6}
           />
           <Input
             label="Traditional Cooking Tips"
@@ -416,6 +456,7 @@ export const EditRecipeScreen = ({ route, navigation }) => {
           <Input label="Rarity Level" value={rarityStatus} onChangeText={setRarityStatus} />
           <Input label="Traditional Cookware Vessel" value={cookingVessel} onChangeText={setCookingVessel} />
           <Input label="Traditional Oil/Medium" value={cookingMedium} onChangeText={setCookingMedium} />
+          <Input label="Traditional Heat Source / Fuel" value={heatSource} onChangeText={setHeatSource} />
         </Card>
 
         {/* Action Panel */}

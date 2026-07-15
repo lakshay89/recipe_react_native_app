@@ -45,7 +45,6 @@ export const Button = ({
 
 const styles = StyleSheet.create({
   baseContainer: {
-    paddingVertical: 10,
     paddingHorizontal: SPACING.lg,
     borderRadius: 16, // Radius in 14-18 range
     alignItems: 'center',

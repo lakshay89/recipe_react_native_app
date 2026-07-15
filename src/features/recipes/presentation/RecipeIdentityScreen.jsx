@@ -6,8 +6,9 @@ import Header from '../../../shared/components/Header';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
-import AutocompleteInput from '../../../shared/components/AutocompleteInput';
 import recentCacheService from '../../../core/services/recentCacheService';
+import RecipeNameAutocomplete from './components/RecipeNameAutocomplete';
+import { normalizeRecipeName, addCustomRecipeName } from '../services/recipeNameService';
 
 export const RecipeIdentityScreen = ({ navigation }) => {
   const { recipeDraft, saveRecipeDraft } = useAuth();
@@ -65,7 +66,15 @@ export const RecipeIdentityScreen = ({ navigation }) => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      recentCacheService.addRecentItem('recipe_names', title);
+      // Auto-save title if it is a new custom entry
+      const normalizedTitle = normalizeRecipeName(title);
+      if (normalizedTitle) {
+        addCustomRecipeName(normalizedTitle).catch((err) =>
+          console.error('Failed to auto-persist custom recipe name', err)
+        );
+      }
+      
+      recentCacheService.addRecentItem('recipe_names', normalizedTitle || title);
       saveCurrentDraft(true);
       navigation.navigate('RecipeLocation');
     } else {
@@ -95,20 +104,12 @@ export const RecipeIdentityScreen = ({ navigation }) => {
 
         {/* Form Card */}
         <Card variant="default" style={styles.formCard}>
-          <AutocompleteInput
-            label="Recipe Name (English) *"
-            placeholder="e.g. Kashmiri Dum Aloo"
+          <RecipeNameAutocomplete
             value={title}
             onChangeText={(text) => {
               setErrors((prev) => ({ ...prev, title: '' }));
               setTitle(text);
             }}
-            suggestions={[
-              'Chicken Seekh Kebab', 'Dal Bati', 'Pongal', 'Rogan Josh', 
-              'Dum Aloo', 'Biryani', 'Masala Dosa', 'Butter Chicken', 
-              'Tandoori Chicken', 'Dhokla', 'Vada Pav', 'Samosa', 
-              'Chole Bhature', 'Idli'
-            ]}
             error={errors.title}
           />
 

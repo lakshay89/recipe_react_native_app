@@ -13,6 +13,7 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
   const [prepTime, setPrepTime] = useState('');
   const [cookTime, setCookTime] = useState('');
   const [totalTime, setTotalTime] = useState('');
+  const [prepSteps, setPrepSteps] = useState([{ detail: '' }]);
   const [cookingSteps, setCookingSteps] = useState([{ detail: '' }]);
   const [traditionalTips, setTraditionalTips] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
@@ -23,6 +24,9 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
       setCookTime(recipeDraft.cookTime || '');
       setTotalTime(recipeDraft.totalTime || '');
       setTraditionalTips(recipeDraft.traditionalTips || '');
+      if (recipeDraft.prepStepsList && recipeDraft.prepStepsList.length > 0) {
+        setPrepSteps(recipeDraft.prepStepsList);
+      }
       if (recipeDraft.cookingStepsList && recipeDraft.cookingStepsList.length > 0) {
         setCookingSteps(recipeDraft.cookingStepsList);
       }
@@ -42,19 +46,29 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
   }, [prepTime, cookTime]);
 
   const saveCurrentDraft = (silent = true) => {
-    // Format instructions list into a single clean string
-    const formattedText = cookingSteps
+    const prepText = prepSteps
       .filter((step) => step.detail.trim())
-      .map((step, index) => `Step ${index + 1}: ${step.detail.trim()}`)
+      .map((step, index) => `Prep Step ${index + 1}: ${step.detail.trim()}`)
       .join('\n');
+
+    const cookingText = cookingSteps
+      .filter((step) => step.detail.trim())
+      .map((step, index) => `Cooking Step ${index + 1}: ${step.detail.trim()}`)
+      .join('\n');
+
+    const combinedText = [
+      prepText ? `[Preparation Steps]\n${prepText}` : '',
+      cookingText ? `[Cooking Steps]\n${cookingText}` : '',
+    ].filter(Boolean).join('\n\n');
 
     const updatedDraft = {
       ...(recipeDraft || {}),
       prepTime,
       cookTime,
       totalTime,
+      prepStepsList: prepSteps,
       cookingStepsList: cookingSteps,
-      instructions: formattedText, // Map to main model string
+      instructions: combinedText, // Map to main model string
       traditionalTips,
     };
     saveRecipeDraft(updatedDraft, 'RecipeCookingMethod');
@@ -69,6 +83,23 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
       );
     }
     return updatedDraft;
+  };
+
+  const handleAddPrepStep = () => {
+    setPrepSteps([...prepSteps, { detail: '' }]);
+  };
+
+  const handleRemovePrepStep = (index) => {
+    if (prepSteps.length === 1) return;
+    const newSteps = [...prepSteps];
+    newSteps.splice(index, 1);
+    setPrepSteps(newSteps);
+  };
+
+  const handlePrepStepChange = (index, value) => {
+    const newSteps = [...prepSteps];
+    newSteps[index].detail = value;
+    setPrepSteps(newSteps);
   };
 
   const handleAddStep = () => {
@@ -89,9 +120,10 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
   };
 
   const handleNext = () => {
-    const validSteps = cookingSteps.filter((step) => step.detail.trim());
-    if (validSteps.length === 0) {
-      Alert.alert('Validation Error', 'Please specify at least one cooking instruction step.');
+    const validPrep = prepSteps.filter((step) => step.detail.trim());
+    const validCooking = cookingSteps.filter((step) => step.detail.trim());
+    if (validPrep.length === 0 && validCooking.length === 0) {
+      Alert.alert('Validation Error', 'Please specify at least one preparation or cooking step.');
       return;
     }
 
@@ -197,13 +229,52 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
             </TouchableOpacity>
           )}
 
-          <Text style={styles.label}>STEP-BY-STEP METHOD *</Text>
+          <Text style={styles.label}>1. PREPARATION STEPS</Text>
 
-          {/* Dynamic instruction inputs */}
-          {cookingSteps.map((item, index) => (
-            <View key={index} style={styles.stepRow}>
+          {/* Dynamic prep step inputs */}
+          {prepSteps.map((item, index) => (
+            <View key={`prep-${index}`} style={styles.stepRow}>
               <View style={styles.stepHeader}>
-                <Text style={styles.stepLabel}>Step {index + 1}</Text>
+                <Text style={styles.stepLabel}>Prep Step {index + 1}</Text>
+                {prepSteps.length > 1 && (
+                  <TouchableOpacity
+                    onPress={() => handleRemovePrepStep(index)}
+                    style={styles.removeBtn}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.removeText}>Remove</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              
+              <Input
+                placeholder="e.g. Wash, peel, and finely chop onions..."
+                value={item.detail}
+                onChangeText={(val) => handlePrepStepChange(index, val)}
+                multiline={true}
+                numberOfLines={3}
+                style={styles.stepInputBox}
+              />
+            </View>
+          ))}
+
+          {/* Add Prep Step Button */}
+          <Button
+            title="+ Add Prep Step"
+            variant="outline"
+            onPress={handleAddPrepStep}
+            style={styles.addStepButton}
+          />
+
+          <View style={styles.separator} />
+
+          <Text style={styles.label}>2. COOKING STEPS</Text>
+
+          {/* Dynamic cooking step inputs */}
+          {cookingSteps.map((item, index) => (
+            <View key={`cook-${index}`} style={styles.stepRow}>
+              <View style={styles.stepHeader}>
+                <Text style={styles.stepLabel}>Cooking Step {index + 1}</Text>
                 {cookingSteps.length > 1 && (
                   <TouchableOpacity
                     onPress={() => handleRemoveStep(index)}
@@ -216,7 +287,7 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
               </View>
               
               <Input
-                placeholder="e.g. Wash and boil potatoes in salted water until tender..."
+                placeholder="e.g. Heat mustard oil and cook spices on slow heat..."
                 value={item.detail}
                 onChangeText={(val) => handleStepChange(index, val)}
                 multiline={true}
@@ -226,9 +297,9 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
             </View>
           ))}
 
-          {/* Add Step Button */}
+          {/* Add Cooking Step Button */}
           <Button
-            title="+ Add Step"
+            title="+ Add Cooking Step"
             variant="outline"
             onPress={handleAddStep}
             style={styles.addStepButton}

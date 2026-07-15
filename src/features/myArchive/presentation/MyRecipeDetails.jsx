@@ -129,9 +129,33 @@ export const MyRecipeDetails = ({ route, navigation }) => {
             <Text style={styles.timingItem}>Total: <Text style={styles.boldTime}>{recipe.totalTime || '0'}m</Text></Text>
           </View>
           <View style={styles.separator} />
-          <Text style={styles.instructionsBody}>
-            {recipe.instructions || 'No preparation steps listed.'}
-          </Text>
+          
+          {recipe.prepStepsList && recipe.prepStepsList.length > 0 ? (
+            <View>
+              <Text style={styles.subSectionTitle}>Preparation Steps:</Text>
+              {recipe.prepStepsList.map((step, idx) => (
+                <Text key={`prep-${idx}`} style={styles.stepItemText}>
+                  • {step.detail}
+                </Text>
+              ))}
+              <View style={styles.miniSeparator} />
+            </View>
+          ) : null}
+
+          {recipe.cookingStepsList && recipe.cookingStepsList.length > 0 ? (
+            <View>
+              <Text style={styles.subSectionTitle}>Cooking Steps:</Text>
+              {recipe.cookingStepsList.map((step, idx) => (
+                <Text key={`cook-${idx}`} style={styles.stepItemText}>
+                  • {step.detail}
+                </Text>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.instructionsBody}>
+              {recipe.instructions || 'No preparation steps listed.'}
+            </Text>
+          )}
           {recipe.traditionalTips ? (
             <View style={styles.tipsBox}>
               <Text style={styles.tipsTitle}>💡 Traditional Tip:</Text>
@@ -150,6 +174,7 @@ export const MyRecipeDetails = ({ route, navigation }) => {
             <View style={styles.metaItem}><Text style={styles.metaLabel}>Rarity:</Text><Text style={styles.metaVal}>{recipe.rarityStatus || 'Common'}</Text></View>
             <View style={styles.metaItem}><Text style={styles.metaLabel}>Vessel:</Text><Text style={styles.metaVal}>{recipe.cookingVessel || 'General Cookware'}</Text></View>
             <View style={styles.metaItem}><Text style={styles.metaLabel}>Medium:</Text><Text style={styles.metaVal}>{recipe.cookingMedium || 'N/A'}</Text></View>
+            <View style={styles.metaItem}><Text style={styles.metaLabel}>Heat Source:</Text><Text style={styles.metaVal}>{recipe.heatSource || 'N/A'}</Text></View>
           </View>
         </Card>
 
@@ -356,6 +381,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.text,
     lineHeight: 22,
+  },
+  subSectionTitle: {
+    ...FONTS.bodyBold,
+    fontSize: 13,
+    color: COLORS.secondary,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  stepItemText: {
+    ...FONTS.body,
+    fontSize: 14,
+    color: COLORS.text,
+    lineHeight: 20,
+    marginBottom: 4,
+    paddingLeft: 4,
+  },
+  miniSeparator: {
+    height: 0.5,
+    backgroundColor: COLORS.borderLight,
+    marginVertical: 8,
   },
   tipsBox: {
     backgroundColor: COLORS.secondaryBackground,

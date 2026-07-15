@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Image } from 'react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import Header from '../../../shared/components/Header';
 import Card from '../../../shared/components/Card';
@@ -51,11 +51,7 @@ export const HomeScreen = ({ navigation }) => {
         </View>
 
         {/* Hero Banner image matching Google Arts & Culture style */}
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() => navigation.navigate('ExhibitDetails', { exhibitId: 'grand-feasts' })}
-          style={styles.heroContainer}
-        >
+        <View style={styles.heroContainer}>
           <Image
             source={require('../../../assets/images/thali.png')}
             style={styles.heroImage}
@@ -66,7 +62,7 @@ export const HomeScreen = ({ navigation }) => {
             <Text style={styles.heroTag}>DIGITAL EXHIBIT</Text>
             <Text style={styles.heroTitle}>Grand Feasts of Ancient India</Text>
           </View>
-        </TouchableOpacity>
+        </View>
 
         {/* Add Your First Recipe CTA */}
         {myRecipes.length === 0 ? (
@@ -100,7 +96,7 @@ export const HomeScreen = ({ navigation }) => {
         )}
 
         {/* Featured Heritage Card with local Forgotten Heritage image */}
-        <Card variant="heritage" style={styles.featuredCard} onPress={() => navigation.navigate('ExhibitDetails', { exhibitId: 'spice-routes' })}>
+        <Card variant="heritage" style={styles.featuredCard}>
           <Image
             source={require('../../../assets/images/chaicup.png')}
             style={styles.featuredImage}
@@ -120,13 +116,6 @@ export const HomeScreen = ({ navigation }) => {
         {/* Seasonal Collections Section */}
         <View style={styles.seasonalHeaderRow}>
           <Text style={styles.seasonalLabel}>SEASONAL COLLECTIONS</Text>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('CollectionsDashboard')}
-            style={styles.browseAllBtn}
-          >
-            <Text style={styles.browseAllText}>Browse All →</Text>
-          </TouchableOpacity>
         </View>
         
         <ScrollView
@@ -135,17 +124,11 @@ export const HomeScreen = ({ navigation }) => {
           contentContainerStyle={styles.seasonalScroll}
         >
           {SEASONAL_COLLECTIONS.map((item) => {
-            const getExhibitId = (id) => {
-              if (id === 's1') return 'grand-feasts';
-              if (id === 's2') return 'royal-kitchens';
-              return 'spice-routes';
-            };
             return (
               <Card 
                 key={item.id} 
                 variant="default" 
                 style={styles.seasonalCard}
-                onPress={() => navigation.navigate('ExhibitDetails', { exhibitId: getExhibitId(item.id) })}
               >
                 <Image source={item.image} style={styles.seasonalImage} resizeMode="cover" />
                 <Text style={styles.seasonalCardTitle}>{item.title}</Text>

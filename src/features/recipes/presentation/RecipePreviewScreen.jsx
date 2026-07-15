@@ -42,6 +42,10 @@ export const RecipePreviewScreen = ({ navigation }) => {
       serves: recipeDraft.serves || '4',
       // Attach mock cover path if selected
       coverImage: recipeDraft.hasHero ? 'thali.png' : 'sweets.png',
+      heatSource: recipeDraft.heatSource || '',
+      cookware: recipeDraft.cookingVessel || '', // Match native key name cookingVessel
+      prepStepsList: recipeDraft.prepStepsList || [],
+      cookingStepsList: recipeDraft.cookingStepsList || [],
     });
 
     if (newRecipe) {
@@ -138,10 +142,49 @@ export const RecipePreviewScreen = ({ navigation }) => {
             <Text style={styles.timingItem}>Cook: <Text style={styles.boldTime}>{recipeDraft?.cookTime || '0'}m</Text></Text>
             <Text style={styles.timingItem}>Total: <Text style={styles.boldTime}>{recipeDraft?.totalTime || '0'}m</Text></Text>
           </View>
+
+          {(recipeDraft?.heatSource || recipeDraft?.cookingVessel || recipeDraft?.cookingMedium) ? (
+            <View style={styles.previewMetaRow}>
+              {recipeDraft?.heatSource ? (
+                <Text style={styles.previewMetaText}>Heat: <Text style={styles.boldMeta}>{recipeDraft.heatSource}</Text></Text>
+              ) : null}
+              {recipeDraft?.cookingVessel ? (
+                <Text style={styles.previewMetaText}>Vessel: <Text style={styles.boldMeta}>{recipeDraft.cookingVessel}</Text></Text>
+              ) : null}
+              {recipeDraft?.cookingMedium ? (
+                <Text style={styles.previewMetaText}>Medium: <Text style={styles.boldMeta}>{recipeDraft.cookingMedium}</Text></Text>
+              ) : null}
+            </View>
+          ) : null}
+
           <View style={styles.separator} />
-          <Text style={styles.instructionsBody}>
-            {recipeDraft?.instructions || 'No preparation steps listed.'}
-          </Text>
+
+          {recipeDraft?.prepStepsList && recipeDraft.prepStepsList.length > 0 ? (
+            <View>
+              <Text style={styles.previewSubLabel}>Preparation Steps:</Text>
+              {recipeDraft.prepStepsList.map((step, idx) => (
+                <Text key={`prep-${idx}`} style={styles.stepPreviewText}>
+                  • {step.detail}
+                </Text>
+              ))}
+              <View style={styles.miniSeparator} />
+            </View>
+          ) : null}
+
+          {recipeDraft?.cookingStepsList && recipeDraft.cookingStepsList.length > 0 ? (
+            <View>
+              <Text style={styles.previewSubLabel}>Cooking Steps:</Text>
+              {recipeDraft.cookingStepsList.map((step, idx) => (
+                <Text key={`cook-${idx}`} style={styles.stepPreviewText}>
+                  • {step.detail}
+                </Text>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.instructionsBody}>
+              {recipeDraft?.instructions || 'No preparation steps listed.'}
+            </Text>
+          )}
         </Card>
 
         {/* Action button row */}
@@ -300,6 +343,41 @@ const styles = StyleSheet.create({
     ...FONTS.body,
     fontSize: 14,
     color: COLORS.textMuted,
+  },
+  previewMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+    marginBottom: SPACING.xs,
+  },
+  previewMetaText: {
+    ...FONTS.body,
+    fontSize: 12,
+    color: COLORS.textMuted,
+  },
+  boldMeta: {
+    fontWeight: '700',
+    color: COLORS.secondary,
+  },
+  previewSubLabel: {
+    ...FONTS.bodyBold,
+    fontSize: 13,
+    color: COLORS.secondary,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  stepPreviewText: {
+    ...FONTS.body,
+    fontSize: 14,
+    color: COLORS.text,
+    lineHeight: 20,
+    marginBottom: 4,
+    paddingLeft: 4,
+  },
+  miniSeparator: {
+    height: 0.5,
+    backgroundColor: COLORS.borderLight,
+    marginVertical: 8,
   },
   boldTime: {
     fontWeight: '700',

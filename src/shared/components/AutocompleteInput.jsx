@@ -59,7 +59,7 @@ export const AutocompleteInput = ({
   };
 
   return (
-    <View style={[styles.container, style, { zIndex: isFocused && filtered.length > 0 ? 999 : 1 }]}>
+    <View style={[styles.container, style, { zIndex: isFocused ? 999 : 1 }]}>
       {label && <Text style={styles.label}>{label}</Text>}
       <View style={containerStyles}>
         <TextInput

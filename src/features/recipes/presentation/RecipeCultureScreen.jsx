@@ -22,6 +22,7 @@ export const RecipeCultureScreen = ({ navigation }) => {
   const [rarityStatus, setRarityStatus] = useState('');
   const [cookingVessel, setCookingVessel] = useState('');
   const [cookingMedium, setCookingMedium] = useState('');
+  const [heatSource, setHeatSource] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
   const [recentVessels, setRecentVessels] = useState([]);
 
@@ -35,6 +36,7 @@ export const RecipeCultureScreen = ({ navigation }) => {
       setRarityStatus(recipeDraft.rarityStatus || '');
       setCookingVessel(recipeDraft.cookingVessel || '');
       setCookingMedium(recipeDraft.cookingMedium || '');
+      setHeatSource(recipeDraft.heatSource || '');
       setIsHydrated(true);
     }
   }, [recipeDraft, isHydrated]);
@@ -54,6 +56,7 @@ export const RecipeCultureScreen = ({ navigation }) => {
       rarityStatus,
       cookingVessel,
       cookingMedium,
+      heatSource,
     };
     saveRecipeDraft(updatedDraft, 'RecipeCulture');
     if (!silent) {
@@ -187,6 +190,17 @@ export const RecipeCultureScreen = ({ navigation }) => {
             onChangeText={setCookingVessel}
             suggestions={COOKING_EQUIPMENT}
           />
+          <View style={styles.chipRow}>
+            {['Pan', 'Kadai', 'Tawa', 'Pressure Cooker', 'Clay Pot', 'Handi', 'Patila'].map((chip) => (
+              <TouchableOpacity
+                key={chip}
+                style={styles.suggestionChip}
+                onPress={() => setCookingVessel(chip)}
+              >
+                <Text style={styles.suggestionChipText}>🥘 {chip}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
           {recentVessels.length > 0 && (
             <View style={styles.chipRow}>
@@ -203,17 +217,35 @@ export const RecipeCultureScreen = ({ navigation }) => {
           )}
 
           <Input
-            label="Traditional Cooking Medium"
+            label="Traditional Cooking Medium (Oil/Ghee)"
             placeholder="e.g. Cold-pressed Mustard Oil, Cow Ghee"
             value={cookingMedium}
             onChangeText={setCookingMedium}
           />
           <View style={styles.chipRow}>
-            {['Wood Fire', 'Charcoal', 'Direct Flame', 'Clay Oven', 'Steam', 'Radiant Heat'].map((chip) => (
+            {['Mustard Oil', 'Cow Ghee', 'Coconut Oil', 'Sesame Oil', 'Peanut Oil', 'Butter', 'None'].map((chip) => (
               <TouchableOpacity
                 key={chip}
                 style={styles.suggestionChip}
                 onPress={() => setCookingMedium(chip)}
+              >
+                <Text style={styles.suggestionChipText}>💧 {chip}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Input
+            label="Traditional Heat Source / Fuel"
+            placeholder="e.g. Gas Stovetop, Wood Fire, Charcoal"
+            value={heatSource}
+            onChangeText={setHeatSource}
+          />
+          <View style={styles.chipRow}>
+            {['Gas Stovetop', 'Charcoal', 'Wood Fire', 'Clay Oven (Tandoor)', 'Induction Cooktop', 'Electric Oven'].map((chip) => (
+              <TouchableOpacity
+                key={chip}
+                style={styles.suggestionChip}
+                onPress={() => setHeatSource(chip)}
               >
                 <Text style={styles.suggestionChipText}>🔥 {chip}</Text>
               </TouchableOpacity>

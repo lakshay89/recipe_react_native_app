@@ -44,7 +44,7 @@ export const RecipeSubmitSuccessScreen = ({ navigation }) => {
           </View>
 
           {/* Action Row */}
-          <View style={styles.buttonRow}>
+          <View style={styles.btnRow}>
             <Button
               title="View Submissions"
               variant="outline"
@@ -136,12 +136,40 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
     paddingHorizontal: SPACING.sm,
   },
+  divider: {
+    width: '100%',
+    height: 1,
+    backgroundColor: '#ECE3D7',
+    marginVertical: SPACING.lg,
+  },
+  infoBox: {
+    backgroundColor: COLORS.secondaryBackground,
+    padding: SPACING.md,
+    borderRadius: 8,
+    width: '100%',
+    marginBottom: SPACING.lg,
+  },
+  infoTitle: {
+    ...FONTS.bodyBold,
+    fontSize: 13,
+    color: COLORS.primary,
+    marginBottom: 4,
+  },
+  infoText: {
+    ...FONTS.caption,
+    textAlign: 'center',
+    fontSize: 12,
+    color: COLORS.textMuted,
+    lineHeight: 16,
+  },
   btnRow: {
     width: '100%',
     gap: 12,
+    alignItems: 'center',
+    marginTop: SPACING.lg, // Added margin top on the button container
   },
   actionBtn: {
-    width: '100%',
+    width: '70%', // Made 30% smaller (70% width)
   },
 });
 
