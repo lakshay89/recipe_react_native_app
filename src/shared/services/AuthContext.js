@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { recipeDraftService } from '../../features/recipes/services/recipeDraftService';
 import { recipeSubmissionService } from '../../features/recipes/services/recipeSubmissionService';
@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
   const [myRecipes, setMyRecipes] = useState([]);
   const [recipeDraft, setRecipeDraft] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const draftSaveTimeoutRef = useRef(null);
 
   // Load state from storage on mount
   useEffect(() => {
@@ -343,13 +344,20 @@ export const AuthProvider = ({ children }) => {
   };
 
   const saveRecipeDraft = async (draft, stepName = 'RecipeIdentity') => {
-    try {
-      setRecipeDraft(draft);
-      await AsyncStorage.setItem('@edible_india_recipe_draft', JSON.stringify(draft));
-      await recipeDraftService.saveDraft(draft, stepName);
-    } catch (e) {
-      console.error(e);
+    setRecipeDraft(draft);
+
+    if (draftSaveTimeoutRef.current) {
+      clearTimeout(draftSaveTimeoutRef.current);
     }
+
+    draftSaveTimeoutRef.current = setTimeout(async () => {
+      try {
+        await AsyncStorage.setItem('@edible_india_recipe_draft', JSON.stringify(draft));
+        await recipeDraftService.saveDraft(draft, stepName);
+      } catch (e) {
+        console.error('Debounced save error:', e);
+      }
+    }, 500);
   };
 
   const clearRecipeDraft = async () => {

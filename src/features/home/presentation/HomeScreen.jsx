@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView } from 'react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import Header from '../../../shared/components/Header';
 import Card from '../../../shared/components/Card';
 import Button from '../../../shared/components/Button';
 import { useAuth } from '../../../shared/services/AuthContext';
+import ImageLoader from '../../../shared/components/ImageLoader';
+import TransitionView from '../../../shared/components/TransitionView';
 
 const SEASONAL_COLLECTIONS = [
   {
@@ -39,7 +41,8 @@ export const HomeScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Edible India" showBack={false} showAvatar={true} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <TransitionView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Welcome Section */}
         <View style={styles.welcomeSection}>
           <Text style={styles.greeting}>
@@ -52,7 +55,7 @@ export const HomeScreen = ({ navigation }) => {
 
         {/* Hero Banner image matching Google Arts & Culture style */}
         <View style={styles.heroContainer}>
-          <Image
+          <ImageLoader
             source={require('../../../assets/images/thali.png')}
             style={styles.heroImage}
             resizeMode="cover"
@@ -97,7 +100,7 @@ export const HomeScreen = ({ navigation }) => {
 
         {/* Featured Heritage Card with local Forgotten Heritage image */}
         <Card variant="heritage" style={styles.featuredCard}>
-          <Image
+          <ImageLoader
             source={require('../../../assets/images/chaicup.png')}
             style={styles.featuredImage}
             resizeMode="cover"
@@ -130,7 +133,7 @@ export const HomeScreen = ({ navigation }) => {
                 variant="default" 
                 style={styles.seasonalCard}
               >
-                <Image source={item.image} style={styles.seasonalImage} resizeMode="cover" />
+                <ImageLoader source={item.image} style={styles.seasonalImage} resizeMode="cover" />
                 <Text style={styles.seasonalCardTitle}>{item.title}</Text>
                 <Text style={styles.seasonalCardDesc} numberOfLines={2}>{item.desc}</Text>
               </Card>
@@ -139,6 +142,7 @@ export const HomeScreen = ({ navigation }) => {
         </ScrollView>
 
       </ScrollView>
+      </TransitionView>
     </SafeAreaView>
   );
 };

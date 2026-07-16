@@ -7,6 +7,7 @@ import Card from '../../../shared/components/Card';
 import { useAuth } from '../../../shared/services/AuthContext';
 import { recipeDraftService } from '../services/recipeDraftService';
 import { FileText } from 'lucide-react-native';
+import TransitionView from '../../../shared/components/TransitionView';
 
 export const AddRecipeIntroScreen = ({ navigation }) => {
   const [draftCount, setDraftCount] = useState(0);
@@ -43,7 +44,8 @@ export const AddRecipeIntroScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor="#FBF7F1" />
       <Header title="Contribute Recipe" showBack={false} showAvatar={true} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <TransitionView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Active Drafts Banner */}
         {draftCount > 0 && (
           <TouchableOpacity
@@ -101,6 +103,7 @@ export const AddRecipeIntroScreen = ({ navigation }) => {
           style={styles.beginButton}
         />
       </ScrollView>
+      </TransitionView>
     </SafeAreaView>
   );
 };

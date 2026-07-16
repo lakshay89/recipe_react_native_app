@@ -7,6 +7,7 @@ import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import AutocompleteInput from '../../../shared/components/AutocompleteInput';
+import TransitionView from '../../../shared/components/TransitionView';
 import { FESTIVALS_BY_STATE } from '../../../core/data/festivalsByState';
 import { COOKING_EQUIPMENT } from '../../../core/data/cookingEquipment';
 import recentCacheService from '../../../core/services/recentCacheService';
@@ -90,7 +91,8 @@ export const RecipeCultureScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Add Recipe" showBack={true} showAvatar={false} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <TransitionView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* Step Indicator */}
         <View style={styles.progressContainer}>
           <Text style={styles.stepText}>STEP 6 OF 8</Text>
@@ -269,6 +271,7 @@ export const RecipeCultureScreen = ({ navigation }) => {
           />
         </View>
       </ScrollView>
+      </TransitionView>
     </SafeAreaView>
   );
 };

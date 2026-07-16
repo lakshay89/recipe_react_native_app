@@ -9,6 +9,7 @@ import Card from '../../../shared/components/Card';
 import recentCacheService from '../../../core/services/recentCacheService';
 import RecipeNameAutocomplete from './components/RecipeNameAutocomplete';
 import { normalizeRecipeName, addCustomRecipeName } from '../services/recipeNameService';
+import TransitionView from '../../../shared/components/TransitionView';
 
 export const RecipeIdentityScreen = ({ navigation }) => {
   const { recipeDraft, saveRecipeDraft } = useAuth();
@@ -21,7 +22,7 @@ export const RecipeIdentityScreen = ({ navigation }) => {
   const [recentRecipes, setRecentRecipes] = useState([]);
   
   const [errors, setErrors] = useState({});
-
+  
   // Initialize fields from draft
   useEffect(() => {
     if (recipeDraft) {
@@ -87,7 +88,8 @@ export const RecipeIdentityScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Add Recipe" showBack={true} showAvatar={false} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <TransitionView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* Step Indicator */}
         <View style={styles.progressContainer}>
           <Text style={styles.stepText}>STEP 1 OF 8</Text>
@@ -209,6 +211,7 @@ export const RecipeIdentityScreen = ({ navigation }) => {
           />
         </View>
       </ScrollView>
+      </TransitionView>
     </View>
   );
 };

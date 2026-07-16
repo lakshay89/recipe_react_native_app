@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet, Platform, View } from 'react-native';
 import { Home, Search, BookPlus, Archive } from 'lucide-react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 
 import { COLORS, FONTS, SHADOWS } from '../../core/theme/theme';
 import { useAuth } from '../../shared/services/AuthContext';
@@ -14,11 +19,42 @@ import MyArchiveDashboard from '../../features/myArchive/presentation/MyArchiveD
 
 const Tab = createBottomTabNavigator();
 
-// Static Icon Renderers to prevent re-creation warnings
-const RenderHomeIcon = ({ color }) => <Home size={22} color={color} strokeWidth={2.2} />;
-const RenderSearchIcon = ({ color }) => <Search size={22} color={color} strokeWidth={2.2} />;
-const RenderAddIcon = ({ color }) => <BookPlus size={22} color={color} strokeWidth={2.2} />;
-const RenderArchiveIcon = ({ color }) => <Archive size={22} color={color} strokeWidth={2.2} />;
+const AnimatedTabIcon = ({ Icon, focused }) => {
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    scale.value = withSpring(focused ? 1.15 : 1, { damping: 15, stiffness: 150 });
+  }, [focused, scale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const activeColor = COLORS.secondary;
+  const inactiveColor = COLORS.textMuted;
+  const color = focused ? activeColor : inactiveColor;
+
+  return (
+    <Animated.View style={[{ alignItems: 'center', justifyContent: 'center', height: 26 }, animatedStyle]}>
+      <Icon size={21} color={color} strokeWidth={2.2} />
+      <Animated.View
+        style={[{
+          width: 4,
+          height: 4,
+          borderRadius: 2,
+          backgroundColor: activeColor,
+          marginTop: 2,
+          opacity: focused ? 1 : 0,
+        }]}
+      />
+    </Animated.View>
+  );
+};
+
+const RenderHomeIcon = ({ focused }) => <AnimatedTabIcon Icon={Home} focused={focused} />;
+const RenderSearchIcon = ({ focused }) => <AnimatedTabIcon Icon={Search} focused={focused} />;
+const RenderAddIcon = ({ focused }) => <AnimatedTabIcon Icon={BookPlus} focused={focused} />;
+const RenderArchiveIcon = ({ focused }) => <AnimatedTabIcon Icon={Archive} focused={focused} />;
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 

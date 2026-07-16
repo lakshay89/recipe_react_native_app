@@ -1,6 +1,13 @@
-import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { COLORS, SPACING, BORDERS, SHADOWS } from '../../core/theme/theme';
+import PressableScale from './PressableScale';
 
 export const Card = ({
   children,
@@ -9,6 +16,19 @@ export const Card = ({
   variant = 'default',
   ...props
 }) => {
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(8);
+
+  useEffect(() => {
+    opacity.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.quad) });
+    translateY.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.quad) });
+  }, [opacity, translateY]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
   const cardStyles = [
     styles.baseCard,
     styles[`${variant}Card`],
@@ -17,21 +37,20 @@ export const Card = ({
 
   if (onPress) {
     return (
-      <TouchableOpacity
+      <PressableScale
         onPress={onPress}
-        activeOpacity={0.9}
-        style={cardStyles}
+        style={[cardStyles, animatedStyle]}
         {...props}
       >
         {children}
-      </TouchableOpacity>
+      </PressableScale>
     );
   }
 
   return (
-    <View style={cardStyles} {...props}>
+    <Animated.View style={[cardStyles, animatedStyle]} {...props}>
       {children}
-    </View>
+    </Animated.View>
   );
 };
 

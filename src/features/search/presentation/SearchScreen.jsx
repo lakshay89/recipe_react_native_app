@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, FlatList, Image } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, Text, StyleSheet, StatusBar, SafeAreaView, FlatList } from 'react-native';
 import { COLORS, FONTS, SPACING } from '../../../core/theme/theme';
 import Header from '../../../shared/components/Header';
 import Input from '../../../shared/components/Input';
 import Card from '../../../shared/components/Card';
+import ImageLoader from '../../../shared/components/ImageLoader';
+import TransitionView from '../../../shared/components/TransitionView';
 
 const FEATURED_ARCHIVES = [
   { 
@@ -31,6 +33,26 @@ const FEATURED_ARCHIVES = [
 
 export const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
+
+  const filteredArchives = useMemo(() => {
+    const query = debouncedQuery.toLowerCase().trim();
+    if (!query) return FEATURED_ARCHIVES;
+    return FEATURED_ARCHIVES.filter((item) =>
+      item.title.toLowerCase().includes(query) ||
+      item.region.toLowerCase().includes(query)
+    );
+  }, [debouncedQuery]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -47,34 +69,37 @@ export const SearchScreen = () => {
 
         <Text style={styles.sectionHeader}>F E A T U R E D  A R C H I V E S</Text>
 
-        <FlatList
-          data={FEATURED_ARCHIVES.filter((item) =>
-            item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.region.toLowerCase().includes(searchQuery.toLowerCase())
-          )}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => (
-            <Card variant="heritage" style={styles.recipeCard}>
-              {/* Split layout: Image on the left, details on the right */}
-              <Image source={item.image} style={styles.recipeThumbnail} resizeMode="cover" />
-              
-              <View style={styles.recipeCardBody}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.tagText}>{item.tag.toUpperCase()}</Text>
-                  <Text style={styles.regionText}>{item.region}</Text>
+        <TransitionView style={{ flex: 1 }}>
+          <FlatList
+            data={filteredArchives}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContent}
+            initialNumToRender={10}
+            maxToRenderPerBatch={5}
+            windowSize={5}
+            removeClippedSubviews={true}
+            renderItem={({ item }) => (
+              <Card variant="heritage" style={styles.recipeCard}>
+                {/* Split layout: Image on the left, details on the right */}
+                <ImageLoader source={item.image} style={styles.recipeThumbnail} resizeMode="cover" />
+                
+                <View style={styles.recipeCardBody}>
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.tagText}>{item.tag.toUpperCase()}</Text>
+                    <Text style={styles.regionText}>{item.region}</Text>
+                  </View>
+                  <Text style={styles.recipeTitle}>{item.title}</Text>
                 </View>
-                <Text style={styles.recipeTitle}>{item.title}</Text>
+              </Card>
+            )}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No heritage recipes found matching your query.</Text>
               </View>
-            </Card>
-          )}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No heritage recipes found matching your query.</Text>
-            </View>
-          }
-        />
+            }
+          />
+        </TransitionView>
       </View>
     </SafeAreaView>
   );

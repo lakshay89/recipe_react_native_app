@@ -1,6 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, StatusBar } from 'react-native';
 import { CheckCircle } from 'lucide-react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withDelay,
+  withSpring,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import Header from '../../../shared/components/Header';
 import Button from '../../../shared/components/Button';
@@ -15,6 +23,40 @@ export const RecipeSubmitSuccessScreen = ({ navigation }) => {
     navigation.navigate('PendingReview');
   };
 
+  const circleScale = useSharedValue(0);
+  const checkmarkScale = useSharedValue(0);
+  const textOpacity = useSharedValue(0);
+  const buttonsOpacity = useSharedValue(0);
+  const buttonsTranslateY = useSharedValue(25);
+
+  useEffect(() => {
+    circleScale.value = withSpring(1, { damping: 12, stiffness: 100 });
+    checkmarkScale.value = withDelay(150, withSpring(1, { damping: 10, stiffness: 120 }));
+    textOpacity.value = withDelay(400, withTiming(1, { duration: 400, easing: Easing.out(Easing.quad) }));
+    buttonsOpacity.value = withDelay(650, withTiming(1, { duration: 400, easing: Easing.out(Easing.quad) }));
+    buttonsTranslateY.value = withDelay(650, withSpring(0, { damping: 14, stiffness: 90 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const animatedCircle = useAnimatedStyle(() => ({
+    transform: [{ scale: circleScale.value }],
+  }));
+
+  const animatedCheckmark = useAnimatedStyle(() => ({
+    transform: [{ scale: checkmarkScale.value }],
+  }));
+
+  const animatedText = useAnimatedStyle(() => ({
+    opacity: textOpacity.value,
+  }));
+
+  const animatedButtons = useAnimatedStyle(() => ({
+    opacity: buttonsOpacity.value,
+    transform: [{ translateY: buttonsTranslateY.value }],
+    width: '100%',
+    alignItems: 'center',
+  }));
+
   return (
     <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#FBF7F1" />
@@ -23,41 +65,47 @@ export const RecipeSubmitSuccessScreen = ({ navigation }) => {
       <View style={styles.container}>
         <Card variant="heritage" style={styles.successCard}>
           {/* Centered Success Checkmark */}
-          <View style={styles.successIconContainer}>
-            <CheckCircle size={40} color={COLORS.primary} strokeWidth={2} />
-          </View>
+          <Animated.View style={[styles.successIconContainer, animatedCircle]}>
+            <Animated.View style={animatedCheckmark}>
+              <CheckCircle size={40} color={COLORS.primary} strokeWidth={2} />
+            </Animated.View>
+          </Animated.View>
 
-          <Text style={styles.congratsTitle}>Curation Preserved</Text>
-          
-          <Text style={styles.message}>
-            Your regional recipe has been submitted for administrative review and cataloging.
-          </Text>
-
-          <View style={styles.divider} />
-
-          {/* Guidelines info */}
-          <View style={styles.infoBox}>
-            <Text style={styles.infoTitle}>⏳ Curation Review Process</Text>
-            <Text style={styles.infoText}>
-              Submissions are reviewed by our regional editors. You will receive an archive notification once validation is complete.
+          <Animated.View style={[styles.textBlock, animatedText]}>
+            <Text style={styles.congratsTitle}>Curation Preserved</Text>
+            
+            <Text style={styles.message}>
+              Your regional recipe has been submitted for administrative review and cataloging.
             </Text>
-          </View>
+
+            <View style={styles.divider} />
+
+            {/* Guidelines info */}
+            <View style={styles.infoBox}>
+              <Text style={styles.infoTitle}>⏳ Curation Review Process</Text>
+              <Text style={styles.infoText}>
+                Submissions are reviewed by our regional editors. You will receive an archive notification once validation is complete.
+              </Text>
+            </View>
+          </Animated.View>
 
           {/* Action Row */}
-          <View style={styles.btnRow}>
-            <Button
-              title="View Submissions"
-              variant="outline"
-              onPress={handleGoToPending}
-              style={styles.actionBtn}
-            />
-            <Button
-              title="Go to My Archive"
-              variant="primary"
-              onPress={handleGoToArchive}
-              style={styles.actionBtn}
-            />
-          </View>
+          <Animated.View style={animatedButtons}>
+            <View style={styles.btnRow}>
+              <Button
+                title="View Submissions"
+                variant="outline"
+                onPress={handleGoToPending}
+                style={styles.actionBtn}
+              />
+              <Button
+                title="Go to My Archive"
+                variant="primary"
+                onPress={handleGoToArchive}
+                style={styles.actionBtn}
+              />
+            </View>
+          </Animated.View>
         </Card>
       </View>
     </View>
@@ -84,6 +132,10 @@ const styles = StyleSheet.create({
     borderWidth: BORDERS.widthThin,
     borderRadius: 16,
     ...SHADOWS.medium,
+  },
+  textBlock: {
+    width: '100%',
+    alignItems: 'center',
   },
   successIconContainer: {
     width: 80,

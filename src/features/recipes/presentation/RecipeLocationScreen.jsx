@@ -8,6 +8,7 @@ import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import AutocompleteInput from '../../../shared/components/AutocompleteInput';
 import recentCacheService from '../../../core/services/recentCacheService';
+import TransitionView from '../../../shared/components/TransitionView';
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 
@@ -278,7 +279,8 @@ export const RecipeLocationScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Add Recipe" showBack={true} showAvatar={false} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <TransitionView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* Step Indicator */}
         <View style={styles.progressContainer}>
           <Text style={styles.stepText}>STEP 2 OF 8</Text>
@@ -485,6 +487,7 @@ export const RecipeLocationScreen = ({ navigation }) => {
           />
         </View>
       </ScrollView>
+      </TransitionView>
     </View>
   );
 };

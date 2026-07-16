@@ -5,6 +5,8 @@ import Header from '../../../shared/components/Header';
 import Card from '../../../shared/components/Card';
 import Input from '../../../shared/components/Input';
 import { ALL_COLLECTIONS } from '../services/collectionsData';
+import ImageLoader from '../../../shared/components/ImageLoader';
+import TransitionView from '../../../shared/components/TransitionView';
 
 export const CollectionsDashboardScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,7 +36,8 @@ export const CollectionsDashboardScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Heritage Collections" showBack={true} showAvatar={true} />
 
-      <FlatList
+      <TransitionView style={{ flex: 1 }}>
+        <FlatList
         data={filteredCollections}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
@@ -82,7 +85,7 @@ export const CollectionsDashboardScreen = ({ navigation }) => {
               <View style={styles.featuredContainer}>
                 <Text style={styles.sectionLabel}>FEATURED CURATION</Text>
                 <Card variant="heritage" style={styles.featuredCard}>
-                  <Image source={featuredCollection.coverImage} style={styles.featuredCover} resizeMode="cover" />
+                  <ImageLoader source={featuredCollection.coverImage} style={styles.featuredCover} resizeMode="cover" />
                   <View style={styles.featuredContent}>
                     <Text style={styles.featuredTitle}>{featuredCollection.title}</Text>
                     <Text style={styles.featuredSubtitle}>{featuredCollection.subtitle}</Text>
@@ -110,7 +113,7 @@ export const CollectionsDashboardScreen = ({ navigation }) => {
         }
         renderItem={({ item }) => (
           <Card variant="default" style={styles.collectionCard}>
-            <Image source={item.coverImage} style={styles.cardImage} resizeMode="cover" />
+            <ImageLoader source={item.coverImage} style={styles.cardImage} resizeMode="cover" />
             <View style={styles.cardInfo}>
               <View style={styles.badgeRow}>
                 {item.tags.map((tag) => (
@@ -144,7 +147,12 @@ export const CollectionsDashboardScreen = ({ navigation }) => {
             <Text style={styles.emptyText}>No curation files match your search criteria. Try a different query.</Text>
           </View>
         }
+        initialNumToRender={5}
+        maxToRenderPerBatch={5}
+        windowSize={5}
+        removeClippedSubviews={true}
       />
+      </TransitionView>
     </SafeAreaView>
   );
 };

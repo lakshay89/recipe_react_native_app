@@ -6,6 +6,7 @@ import Header from '../../../shared/components/Header';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import { recipeDraftService } from '../services/recipeDraftService';
+import TransitionView from '../../../shared/components/TransitionView';
 
 export const RecipePreviewScreen = ({ navigation }) => {
   const { recipeDraft, addRecipe, clearRecipeDraft } = useAuth();
@@ -67,7 +68,8 @@ export const RecipePreviewScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Archival Preview" showBack={true} showAvatar={false} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <TransitionView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Step Indicator */}
         <View style={styles.progressContainer}>
           <Text style={styles.stepText}>STEP 8 OF 8</Text>
@@ -203,6 +205,7 @@ export const RecipePreviewScreen = ({ navigation }) => {
           />
         </View>
       </ScrollView>
+      </TransitionView>
     </SafeAreaView>
   );
 };

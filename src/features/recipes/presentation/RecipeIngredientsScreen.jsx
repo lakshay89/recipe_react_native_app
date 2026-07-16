@@ -10,6 +10,7 @@ import Card from '../../../shared/components/Card';
 import MasterAutocompleteInput from '../../../shared/components/MasterAutocompleteInput';
 import { getAllIngredients, addCustomIngredient } from '../services/masterIngredientService';
 import recentCacheService from '../../../core/services/recentCacheService';
+import TransitionView from '../../../shared/components/TransitionView';
 
 const UNIT_CATEGORIES = [
   {
@@ -169,7 +170,8 @@ export const RecipeIngredientsScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Add Recipe" showBack={true} showAvatar={false} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <TransitionView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* Step Indicator */}
         <View style={styles.progressContainer}>
           <Text style={styles.stepText}>STEP 4 OF 8</Text>
@@ -350,6 +352,7 @@ export const RecipeIngredientsScreen = ({ navigation }) => {
           />
         </View>
       </ScrollView>
+      </TransitionView>
       {/* Searchable Units Modal Selector */}
       <Modal
         visible={showModal}

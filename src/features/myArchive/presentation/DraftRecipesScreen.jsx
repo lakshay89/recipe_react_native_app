@@ -24,6 +24,7 @@ import Header from '../../../shared/components/Header';
 import Card from '../../../shared/components/Card';
 import Button from '../../../shared/components/Button';
 import { recipeDraftService } from '../../recipes/services/recipeDraftService';
+import TransitionView from '../../../shared/components/TransitionView';
 
 export const DraftRecipesScreen = ({ navigation }) => {
   const { saveRecipeDraft } = useAuth();
@@ -43,18 +44,12 @@ export const DraftRecipesScreen = ({ navigation }) => {
   }, []);
 
   const handleContinueEditing = async (item) => {
-    // 1. Restore this draft in active context
     await saveRecipeDraft(item, item.currentStep);
-    
-    // 2. Navigate user to correct Add Recipe wizard step
     navigation.navigate('AddRecipe', { screen: item.currentStep || 'RecipeIdentity' });
   };
 
   const handlePreviewDraft = async (item) => {
-    // 1. Restore active context
     await saveRecipeDraft(item, item.currentStep);
-    
-    // 2. Route directly to preview layout
     navigation.navigate('AddRecipe', { screen: 'RecipePreview' });
   };
 
@@ -104,102 +99,108 @@ export const DraftRecipesScreen = ({ navigation }) => {
           <Text style={styles.loaderText}>Loading Curation Drafts...</Text>
         </View>
       ) : (
-        <FlatList
-          data={drafts}
-          keyExtractor={(item) => item.draftId}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <Card variant="default" style={styles.recipeCard}>
-              <View style={styles.infoCol}>
-                {/* Draft Header */}
-                <View style={styles.cardHeader}>
-                  <Text style={styles.recipeTitle}>
-                    {item.recipeName || item.title || 'Untitled Draft'}
-                  </Text>
-                  <Text style={styles.timeText}>
-                    <Clock size={12} color={COLORS.textMuted} style={styles.inlineIcon} />{' '}
-                    {formatRelativeTime(item.updatedAt)}
-                  </Text>
-                </View>
-
-                {/* Region Watermark */}
-                <View style={styles.metaRow}>
-                  <MapPin size={13} color={COLORS.primary} style={styles.inlineIcon} />
-                  <Text style={styles.locationText}>
-                    {item.region || 'Region undefined'}
-                  </Text>
-                </View>
-
-                {/* Progress bar percentage */}
-                <View style={styles.progressRow}>
-                  <View style={styles.progressBarOuter}>
-                    <View style={[styles.progressBarFill, { width: `${item.completionPercentage || 0}%` }]} />
+        <TransitionView style={{ flex: 1 }}>
+          <FlatList
+            data={drafts}
+            keyExtractor={(item) => item.draftId}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+            initialNumToRender={10}
+            maxToRenderPerBatch={5}
+            windowSize={5}
+            removeClippedSubviews={true}
+            renderItem={({ item }) => (
+              <Card variant="default" style={styles.recipeCard}>
+                <View style={styles.infoCol}>
+                  {/* Draft Header */}
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.recipeTitle}>
+                      {item.recipeName || item.title || 'Untitled Draft'}
+                    </Text>
+                    <Text style={styles.timeText}>
+                      <Clock size={12} color={COLORS.textMuted} style={styles.inlineIcon} />{' '}
+                      {formatRelativeTime(item.updatedAt)}
+                    </Text>
                   </View>
-                  <Text style={styles.percentageText}>
-                    {Math.round(item.completionPercentage || 0)}% Complete
-                  </Text>
+
+                  {/* Region Watermark */}
+                  <View style={styles.metaRow}>
+                    <MapPin size={13} color={COLORS.primary} style={styles.inlineIcon} />
+                    <Text style={styles.locationText}>
+                      {item.region || 'Region undefined'}
+                    </Text>
+                  </View>
+
+                  {/* Progress bar percentage */}
+                  <View style={styles.progressRow}>
+                    <View style={styles.progressBarOuter}>
+                      <View style={[styles.progressBarFill, { width: `${item.completionPercentage || 0}%` }]} />
+                    </View>
+                    <Text style={styles.percentageText}>
+                      {Math.round(item.completionPercentage || 0)}% Complete
+                    </Text>
+                  </View>
+
+                  {/* Action Controls */}
+                  <View style={styles.actionsPanel}>
+                    <TouchableOpacity
+                      onPress={() => handleContinueEditing(item)}
+                      style={styles.actionBtn}
+                      activeOpacity={0.7}
+                    >
+                      <Edit3 size={14} color={COLORS.primary} style={styles.btnIcon} />
+                      <Text style={styles.actionText}>Continue</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('EditRecipe', { recipeId: item.draftId, isDraft: true })}
+                      style={styles.actionBtn}
+                      activeOpacity={0.7}
+                    >
+                      <Edit3 size={14} color={COLORS.gold} style={styles.btnIcon} />
+                      <Text style={[styles.actionText, { color: COLORS.gold }]}>Form Edit</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => handlePreviewDraft(item)}
+                      style={styles.actionBtn}
+                      activeOpacity={0.7}
+                    >
+                      <Eye size={14} color={COLORS.secondary} style={styles.btnIcon} />
+                      <Text style={[styles.actionText, { color: COLORS.secondary }]}>Preview</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => handleDeletePrompt(item.draftId)}
+                      style={[styles.actionBtn, styles.deleteBtn]}
+                      activeOpacity={0.7}
+                    >
+                      <Trash2 size={14} color={COLORS.error} style={styles.btnIcon} />
+                      <Text style={styles.deleteText}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-
-                {/* Action Controls */}
-                <View style={styles.actionsPanel}>
-                  <TouchableOpacity
-                    onPress={() => handleContinueEditing(item)}
-                    style={styles.actionBtn}
-                    activeOpacity={0.7}
-                  >
-                    <Edit3 size={14} color={COLORS.primary} style={styles.btnIcon} />
-                    <Text style={styles.actionText}>Continue</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate('EditRecipe', { recipeId: item.draftId, isDraft: true })}
-                    style={styles.actionBtn}
-                    activeOpacity={0.7}
-                  >
-                    <Edit3 size={14} color={COLORS.gold} style={styles.btnIcon} />
-                    <Text style={[styles.actionText, { color: COLORS.gold }]}>Form Edit</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => handlePreviewDraft(item)}
-                    style={styles.actionBtn}
-                    activeOpacity={0.7}
-                  >
-                    <Eye size={14} color={COLORS.secondary} style={styles.btnIcon} />
-                    <Text style={[styles.actionText, { color: COLORS.secondary }]}>Preview</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => handleDeletePrompt(item.draftId)}
-                    style={[styles.actionBtn, styles.deleteBtn]}
-                    activeOpacity={0.7}
-                  >
-                    <Trash2 size={14} color={COLORS.error} style={styles.btnIcon} />
-                    <Text style={styles.deleteText}>Delete</Text>
-                  </TouchableOpacity>
+              </Card>
+            )}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <View style={styles.emptyIconCircle}>
+                  <BookOpen size={40} color={COLORS.gold} />
                 </View>
+                <Text style={styles.emptyText}>No Active Drafts Found</Text>
+                <Text style={styles.emptySub}>
+                  All your edits have been completed and archived. Begin a new heritage recipe curation below.
+                </Text>
+                <Button
+                  title="Add Heritage Recipe"
+                  variant="primary"
+                  onPress={() => navigation.navigate('AddRecipe')}
+                  style={styles.emptyBtn}
+                />
               </View>
-            </Card>
-          )}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconCircle}>
-                <BookOpen size={40} color={COLORS.gold} />
-              </View>
-              <Text style={styles.emptyText}>No Active Drafts Found</Text>
-              <Text style={styles.emptySub}>
-                All your edits have been completed and archived. Begin a new heritage recipe curation below.
-              </Text>
-              <Button
-                title="Add Heritage Recipe"
-                variant="primary"
-                onPress={() => navigation.navigate('AddRecipe')}
-                style={styles.emptyBtn}
-              />
-            </View>
-          }
-        />
+            }
+          />
+        </TransitionView>
       )}
     </SafeAreaView>
   );
@@ -258,7 +259,7 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   inlineIcon: {
     marginRight: 4,
@@ -266,48 +267,49 @@ const styles = StyleSheet.create({
   locationText: {
     ...FONTS.caption,
     fontSize: 12,
-    color: '#666666',
+    color: COLORS.textMuted,
   },
   progressRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    gap: 10,
+    marginBottom: 14,
   },
   progressBarOuter: {
     flex: 1,
-    height: 6,
-    backgroundColor: '#F3EDE4',
-    borderRadius: 3,
-    marginRight: 8,
-    overflow: 'hidden',
+    height: 4,
+    backgroundColor: '#ECE3D7',
+    borderRadius: 2,
   },
   progressBarFill: {
-    height: '100%',
-    backgroundColor: COLORS.primary,
+    height: 4,
+    backgroundColor: COLORS.secondary,
+    borderRadius: 2,
   },
   percentageText: {
+    ...FONTS.caption,
     fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.primary,
+    fontWeight: '600',
+    color: COLORS.textMuted,
   },
   actionsPanel: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     borderTopWidth: 1,
-    borderTopColor: '#F0E6D8',
-    paddingTop: 12,
+    borderTopColor: '#F5ECE1',
+    paddingTop: 10,
     rowGap: 8,
   },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FBF8F4',
-    paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 8,
-    borderWidth: 0.5,
+    backgroundColor: '#FAF5EE',
+    borderWidth: 1,
     borderColor: '#ECE3D7',
     width: '48%',
   },
@@ -320,7 +322,6 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   deleteBtn: {
-    marginLeft: 'auto',
     backgroundColor: '#FCE8E6',
   },
   deleteText: {

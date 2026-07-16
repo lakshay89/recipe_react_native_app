@@ -6,6 +6,7 @@ import Header from '../../../shared/components/Header';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
+import TransitionView from '../../../shared/components/TransitionView';
 
 export const RecipeCookingMethodScreen = ({ navigation }) => {
   const { recipeDraft, saveRecipeDraft } = useAuth();
@@ -136,7 +137,8 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Add Recipe" showBack={true} showAvatar={false} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <TransitionView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* Step Indicator */}
         <View style={styles.progressContainer}>
           <Text style={styles.stepText}>STEP 5 OF 8</Text>
@@ -351,6 +353,7 @@ export const RecipeCookingMethodScreen = ({ navigation }) => {
           />
         </View>
       </ScrollView>
+      </TransitionView>
     </SafeAreaView>
   );
 };

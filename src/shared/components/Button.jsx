@@ -1,6 +1,7 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { COLORS, SPACING, BORDERS, SHADOWS } from '../../core/theme/theme';
+import PressableScale from './PressableScale';
 
 export const Button = ({
   title,
@@ -27,10 +28,9 @@ export const Button = ({
   ];
 
   return (
-    <TouchableOpacity
+    <PressableScale
       onPress={onPress}
       disabled={disabled || loading}
-      activeOpacity={0.8}
       style={containerStyles}
       {...props}
     >
@@ -39,7 +39,7 @@ export const Button = ({
       ) : (
         <Text style={labelStyles}>{title}</Text>
       )}
-    </TouchableOpacity>
+    </PressableScale>
   );
 };
 

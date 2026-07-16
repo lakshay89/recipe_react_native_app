@@ -6,6 +6,7 @@ import { useAuth } from '../../../shared/services/AuthContext';
 import Header from '../../../shared/components/Header';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
+import TransitionView from '../../../shared/components/TransitionView';
 
 export const RecipeMediaUploadScreen = ({ navigation }) => {
   const { recipeDraft, saveRecipeDraft } = useAuth();
@@ -431,7 +432,8 @@ export const RecipeMediaUploadScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Add Recipe" showBack={true} showAvatar={false} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <TransitionView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Step Indicator */}
         <View style={styles.progressContainer}>
           <Text style={styles.stepText}>STEP 7 OF 8</Text>
@@ -644,6 +646,7 @@ export const RecipeMediaUploadScreen = ({ navigation }) => {
           />
         </View>
       </ScrollView>
+      </TransitionView>
     </SafeAreaView>
   );
 };

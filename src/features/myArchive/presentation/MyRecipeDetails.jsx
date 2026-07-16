@@ -5,6 +5,8 @@ import { useAuth } from '../../../shared/services/AuthContext';
 import Header from '../../../shared/components/Header';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
+import ExpandableSection from '../../../shared/components/ExpandableSection';
+import TransitionView from '../../../shared/components/TransitionView';
 
 import { ALL_COLLECTIONS } from '../../collections/services/collectionsData';
 
@@ -62,7 +64,8 @@ export const MyRecipeDetails = ({ route, navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header title="Archival Detail" showBack={true} showAvatar={false} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <TransitionView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Cover Visual Header */}
         <View style={styles.coverContainer}>
           {recipe.coverImage === 'thali.png' || recipe.hasHero ? (
@@ -101,98 +104,103 @@ export const MyRecipeDetails = ({ route, navigation }) => {
 
         {/* Story / Lineage */}
         <Card variant="default" style={styles.sectionCard}>
-          <Text style={styles.sectionLabel}>HERITAGE & SOURCE LORE</Text>
-          <Text style={styles.lineageHeader}>Transmission: {recipe.heritageSource || 'Oral history'}</Text>
-          {recipe.whoTaughtYou ? (
-            <Text style={styles.lineageInstructor}>Passed down by: {recipe.whoTaughtYou}</Text>
-          ) : null}
-          {recipe.numGenerations ? (
-            <Text style={styles.lineageGenerations}>Generations Preserved: {recipe.numGenerations}</Text>
-          ) : null}
-          <Text style={styles.narrativeBody}>{recipe.history || 'No oral history documentation.'}</Text>
+          <ExpandableSection title="HERITAGE & SOURCE LORE" initialExpanded={true}>
+            <Text style={styles.lineageHeader}>Transmission: {recipe.heritageSource || 'Oral history'}</Text>
+            {recipe.whoTaughtYou ? (
+              <Text style={styles.lineageInstructor}>Passed down by: {recipe.whoTaughtYou}</Text>
+            ) : null}
+            {recipe.numGenerations ? (
+              <Text style={styles.lineageGenerations}>Generations Preserved: {recipe.numGenerations}</Text>
+            ) : null}
+            <Text style={styles.narrativeBody}>{recipe.history || 'No oral history documentation.'}</Text>
+          </ExpandableSection>
         </Card>
 
         {/* Ingredients */}
         <Card variant="default" style={styles.sectionCard}>
-          <Text style={styles.sectionLabel}>INGREDIENTS (Serves - {recipe.serves || '4'})</Text>
-          <Text style={styles.ingredientsBody}>
-            {recipe.ingredients || 'No ingredients configured.'}
-          </Text>
+          <ExpandableSection title={`INGREDIENTS (Serves - ${recipe.serves || '4'})`} initialExpanded={true}>
+            <Text style={styles.ingredientsBody}>
+              {recipe.ingredients || 'No ingredients configured.'}
+            </Text>
+          </ExpandableSection>
         </Card>
 
         {/* Timings & Instructions */}
         <Card variant="default" style={styles.sectionCard}>
-          <Text style={styles.sectionLabel}>PREPARATION METHOD</Text>
-          <View style={styles.timingsRow}>
-            <Text style={styles.timingItem}>Prep: <Text style={styles.boldTime}>{recipe.prepTime || '0'}m</Text></Text>
-            <Text style={styles.timingItem}>Cook: <Text style={styles.boldTime}>{recipe.cookTime || '0'}m</Text></Text>
-            <Text style={styles.timingItem}>Total: <Text style={styles.boldTime}>{recipe.totalTime || '0'}m</Text></Text>
-          </View>
-          <View style={styles.separator} />
-          
-          {recipe.prepStepsList && recipe.prepStepsList.length > 0 ? (
-            <View>
-              <Text style={styles.subSectionTitle}>Preparation Steps:</Text>
-              {recipe.prepStepsList.map((step, idx) => (
-                <Text key={`prep-${idx}`} style={styles.stepItemText}>
-                  • {step.detail}
-                </Text>
-              ))}
-              <View style={styles.miniSeparator} />
+          <ExpandableSection title="PREPARATION METHOD" initialExpanded={true}>
+            <View style={styles.timingsRow}>
+              <Text style={styles.timingItem}>Prep: <Text style={styles.boldTime}>{recipe.prepTime || '0'}m</Text></Text>
+              <Text style={styles.timingItem}>Cook: <Text style={styles.boldTime}>{recipe.cookTime || '0'}m</Text></Text>
+              <Text style={styles.timingItem}>Total: <Text style={styles.boldTime}>{recipe.totalTime || '0'}m</Text></Text>
             </View>
-          ) : null}
+            <View style={styles.separator} />
+            
+            {recipe.prepStepsList && recipe.prepStepsList.length > 0 ? (
+              <View>
+                <Text style={styles.subSectionTitle}>Preparation Steps:</Text>
+                {recipe.prepStepsList.map((step, idx) => (
+                  <Text key={`prep-${idx}`} style={styles.stepItemText}>
+                    • {step.detail}
+                  </Text>
+                ))}
+                <View style={styles.miniSeparator} />
+              </View>
+            ) : null}
 
-          {recipe.cookingStepsList && recipe.cookingStepsList.length > 0 ? (
-            <View>
-              <Text style={styles.subSectionTitle}>Cooking Steps:</Text>
-              {recipe.cookingStepsList.map((step, idx) => (
-                <Text key={`cook-${idx}`} style={styles.stepItemText}>
-                  • {step.detail}
-                </Text>
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.instructionsBody}>
-              {recipe.instructions || 'No preparation steps listed.'}
-            </Text>
-          )}
-          {recipe.traditionalTips ? (
-            <View style={styles.tipsBox}>
-              <Text style={styles.tipsTitle}>💡 Traditional Tip:</Text>
-              <Text style={styles.tipsText}>{recipe.traditionalTips}</Text>
-            </View>
-          ) : null}
+            {recipe.cookingStepsList && recipe.cookingStepsList.length > 0 ? (
+              <View>
+                <Text style={styles.subSectionTitle}>Cooking Steps:</Text>
+                {recipe.cookingStepsList.map((step, idx) => (
+                  <Text key={`cook-${idx}`} style={styles.stepItemText}>
+                    • {step.detail}
+                  </Text>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.instructionsBody}>
+                {recipe.instructions || 'No preparation steps listed.'}
+              </Text>
+            )}
+            {recipe.traditionalTips ? (
+              <View style={styles.tipsBox}>
+                <Text style={styles.tipsTitle}>💡 Traditional Tip:</Text>
+                <Text style={styles.tipsText}>{recipe.traditionalTips}</Text>
+              </View>
+            ) : null}
+          </ExpandableSection>
         </Card>
 
         {/* Cultural Metadata */}
         <Card variant="default" style={styles.sectionCard}>
-          <Text style={styles.sectionLabel}>CULTURAL CLASSIFICATION</Text>
-          <View style={styles.metaGrid}>
-            <View style={styles.metaItem}><Text style={styles.metaLabel}>Festival:</Text><Text style={styles.metaVal}>{recipe.festival || 'None'}</Text></View>
-            <View style={styles.metaItem}><Text style={styles.metaLabel}>Season:</Text><Text style={styles.metaVal}>{recipe.season || 'All Year'}</Text></View>
-            <View style={styles.metaItem}><Text style={styles.metaLabel}>Diet Type:</Text><Text style={styles.metaVal}>{recipe.dietType || 'N/A'}</Text></View>
-            <View style={styles.metaItem}><Text style={styles.metaLabel}>Rarity:</Text><Text style={styles.metaVal}>{recipe.rarityStatus || 'Common'}</Text></View>
-            <View style={styles.metaItem}><Text style={styles.metaLabel}>Vessel:</Text><Text style={styles.metaVal}>{recipe.cookingVessel || 'General Cookware'}</Text></View>
-            <View style={styles.metaItem}><Text style={styles.metaLabel}>Medium:</Text><Text style={styles.metaVal}>{recipe.cookingMedium || 'N/A'}</Text></View>
-            <View style={styles.metaItem}><Text style={styles.metaLabel}>Heat Source:</Text><Text style={styles.metaVal}>{recipe.heatSource || 'N/A'}</Text></View>
-          </View>
+          <ExpandableSection title="CULTURAL CLASSIFICATION" initialExpanded={false}>
+            <View style={styles.metaGrid}>
+              <View style={styles.metaItem}><Text style={styles.metaLabel}>Festival:</Text><Text style={styles.metaVal}>{recipe.festival || 'None'}</Text></View>
+              <View style={styles.metaItem}><Text style={styles.metaLabel}>Season:</Text><Text style={styles.metaVal}>{recipe.season || 'All Year'}</Text></View>
+              <View style={styles.metaItem}><Text style={styles.metaLabel}>Diet Type:</Text><Text style={styles.metaVal}>{recipe.dietType || 'N/A'}</Text></View>
+              <View style={styles.metaItem}><Text style={styles.metaLabel}>Rarity:</Text><Text style={styles.metaVal}>{recipe.rarityStatus || 'Common'}</Text></View>
+              <View style={styles.metaItem}><Text style={styles.metaLabel}>Vessel:</Text><Text style={styles.metaVal}>{recipe.cookingVessel || 'General Cookware'}</Text></View>
+              <View style={styles.metaItem}><Text style={styles.metaLabel}>Medium:</Text><Text style={styles.metaVal}>{recipe.cookingMedium || 'N/A'}</Text></View>
+              <View style={styles.metaItem}><Text style={styles.metaLabel}>Heat Source:</Text><Text style={styles.metaVal}>{recipe.heatSource || 'N/A'}</Text></View>
+            </View>
+          </ExpandableSection>
         </Card>
 
         {/* Admin Review Log */}
         {recipe.reviewHistory && recipe.reviewHistory.length > 0 ? (
           <Card variant="default" style={styles.sectionCard}>
-            <Text style={styles.sectionLabel}>ADMINISTRATIVE VERIFICATION LOG</Text>
-            {recipe.reviewHistory.map((log, index) => (
-              <View key={index} style={styles.logRow}>
-                <View style={styles.logBullet} />
-                <View style={styles.logContent}>
-                  <Text style={styles.logMeta}>
-                    Date: {new Date(log.date).toLocaleDateString()} | Status: {log.status}
-                  </Text>
-                  <Text style={styles.logNotes}>Notes: {log.notes}</Text>
+            <ExpandableSection title="ADMINISTRATIVE VERIFICATION LOG" initialExpanded={false}>
+              {recipe.reviewHistory.map((log, index) => (
+                <View key={index} style={styles.logRow}>
+                  <View style={styles.logBullet} />
+                  <View style={styles.logContent}>
+                    <Text style={styles.logMeta}>
+                      Date: {new Date(log.date).toLocaleDateString()} | Status: {log.status}
+                    </Text>
+                    <Text style={styles.logNotes}>Notes: {log.notes}</Text>
+                  </View>
                 </View>
-              </View>
-            ))}
+              ))}
+            </ExpandableSection>
           </Card>
         ) : null}
 
@@ -214,6 +222,7 @@ export const MyRecipeDetails = ({ route, navigation }) => {
           </View>
         )}
       </ScrollView>
+      </TransitionView>
     </SafeAreaView>
   );
 };
