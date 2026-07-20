@@ -12,6 +12,12 @@ import RecipeMediaUploadScreen from '../../features/recipes/presentation/RecipeM
 import RecipePreviewScreen from '../../features/recipes/presentation/RecipePreviewScreen';
 import RecipeSubmitSuccessScreen from '../../features/recipes/presentation/RecipeSubmitSuccessScreen';
 
+// OCR Image Import screens
+import RecipeImageImportScreen from '../../features/recipes/presentation/RecipeImageImportScreen';
+import OCRReviewScreen from '../../features/recipes/presentation/OCRReviewScreen';
+import StructuredRecipeReviewScreen from '../../features/recipes/presentation/StructuredRecipeReviewScreen';
+import MissingFieldsScreen from '../../features/recipes/presentation/MissingFieldsScreen';
+
 const Stack = createNativeStackNavigator();
 
 export const AddRecipeNavigator = () => {
@@ -24,6 +30,10 @@ export const AddRecipeNavigator = () => {
       }}
     >
       <Stack.Screen name="AddRecipeIntro" component={AddRecipeIntroScreen} />
+      <Stack.Screen name="RecipeImageImport" component={RecipeImageImportScreen} />
+      <Stack.Screen name="OCRReview" component={OCRReviewScreen} />
+      <Stack.Screen name="StructuredRecipeReview" component={StructuredRecipeReviewScreen} />
+      <Stack.Screen name="MissingFields" component={MissingFieldsScreen} />
       <Stack.Screen name="RecipeIdentity" component={RecipeIdentityScreen} />
       <Stack.Screen name="RecipeLocation" component={RecipeLocationScreen} />
       <Stack.Screen name="RecipeHeritageSource" component={RecipeHeritageSourceScreen} />

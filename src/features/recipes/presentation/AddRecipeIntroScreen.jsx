@@ -102,6 +102,13 @@ export const AddRecipeIntroScreen = ({ navigation }) => {
           onPress={handleBegin}
           style={styles.beginButton}
         />
+
+        <Button
+          title="Import Recipe from Image"
+          variant="outline"
+          onPress={() => navigation.navigate('RecipeImageImport')}
+          style={styles.importButton}
+        />
       </ScrollView>
       </TransitionView>
     </SafeAreaView>
@@ -212,6 +219,10 @@ const styles = StyleSheet.create({
   },
   beginButton: {
     width: '100%',
+  },
+  importButton: {
+    width: '100%',
+    marginTop: 10,
   },
 });
 
