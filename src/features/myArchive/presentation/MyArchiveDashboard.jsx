@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, FlatList, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, SafeAreaView, FlatList, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import { useAuth } from '../../../shared/services/AuthContext';
 import Header from '../../../shared/components/Header';
@@ -7,38 +7,91 @@ import Card from '../../../shared/components/Card';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import { recipeDraftService } from '../../recipes/services/recipeDraftService';
+import { useConnectionStatus } from '../../../shared/services/offlineService';
+import { recipeSubmissionService } from '../../recipes/services/recipeSubmissionService';
 
 export const MyArchiveDashboard = ({ navigation }) => {
-  const { myRecipes, duplicateRecipe, deleteRecipe } = useAuth();
+  const isConnected = useConnectionStatus();
+  const { duplicateRecipe, deleteRecipe } = useAuth();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [sortOrder, setSortOrder] = useState('Newest');
-  const [draftCount, setDraftCount] = useState(0);
+  
+  const [drafts, setDrafts] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const dList = await recipeDraftService.getAllDrafts();
+      const sList = await recipeSubmissionService.getAllSubmissions();
+      setDrafts(dList || []);
+      setSubmissions(sList || []);
+    } catch (e) {
+      console.error(e);
+      setError('Failed to refresh your archives.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      recipeDraftService.getAllDrafts().then((list) => {
-        setDraftCount(list.length);
-      });
+      loadData();
     });
     return unsubscribe;
   }, [navigation]);
 
+  // Map drafts & submissions to combined format
+  const mapDraftToItem = (draft) => ({
+    ...draft,
+    id: draft.draftId,
+    status: 'Draft',
+    createdAt: draft.clientUpdatedAt || draft.createdAt || new Date().toISOString(),
+    isSubmission: false
+  });
+
+  const mapSubmissionToItem = (sub) => {
+    const activeSnap = sub.revisions && sub.revisions.length > 0 
+      ? sub.revisions[sub.revisions.length - 1].recipeSnapshot 
+      : {};
+    return {
+      ...activeSnap,
+      id: sub.submissionId || sub._id,
+      submissionId: sub.submissionId,
+      submissionReference: sub.submissionReference,
+      status: sub.status,
+      createdAt: sub.createdAt || sub.submittedAt || new Date().toISOString(),
+      isSubmission: true,
+      curatorFeedback: sub.reviewComments || '',
+      revision: sub.revision
+    };
+  };
+
+  const combinedRecipes = [
+    ...drafts.map(mapDraftToItem),
+    ...submissions.map(mapSubmissionToItem)
+  ];
+
   // Archive stats
-  const totalCount = myRecipes.length;
-  const pendingCount = myRecipes.filter((r) => {
+  const totalCount = combinedRecipes.length;
+  const draftCount = drafts.length;
+  const pendingCount = submissions.filter((r) => {
     const s = (r.status || '').toLowerCase();
-    return s === 'pending_review' || s === 'pending review' || s === 'update_under_review' || s === 'update under review';
+    return s === 'submitted' || s === 'under_review' || s === 'resubmitted';
   }).length;
-  const publishedCount = myRecipes.filter((r) => {
+  const publishedCount = submissions.filter((r) => {
     const s = (r.status || '').toLowerCase();
     return s === 'approved' || s === 'published';
   }).length;
-  const rejectedCount = myRecipes.filter((r) => (r.status || '').toLowerCase() === 'rejected').length;
+  const rejectedCount = submissions.filter((r) => (r.status || '').toLowerCase() === 'rejected').length;
 
   // Filter & Search Logic
-  const filteredRecipes = myRecipes.filter((recipe) => {
-    // 1. Search Query match
+  const filteredRecipes = combinedRecipes.filter((recipe) => {
     const query = searchQuery.toLowerCase().trim();
     const matchesSearch = query === '' || 
       (recipe.title || '').toLowerCase().includes(query) ||
@@ -48,19 +101,18 @@ export const MyArchiveDashboard = ({ navigation }) => {
       (recipe.community || '').toLowerCase().includes(query) ||
       (recipe.festival || '').toLowerCase().includes(query);
 
-    // 2. Active Filter chip match
     let matchesFilter = true;
     const statusLower = (recipe.status || '').toLowerCase();
     if (activeFilter === 'Draft') {
-      matchesFilter = statusLower === 'draft';
+      matchesFilter = !recipe.isSubmission;
     } else if (activeFilter === 'Pending') {
-      matchesFilter = statusLower === 'pending_review' || statusLower === 'pending review' || statusLower === 'update_under_review' || statusLower === 'update under review';
+      matchesFilter = recipe.isSubmission && (statusLower === 'submitted' || statusLower === 'under_review' || statusLower === 'resubmitted');
     } else if (activeFilter === 'Published') {
-      matchesFilter = statusLower === 'approved' || statusLower === 'published';
+      matchesFilter = recipe.isSubmission && (statusLower === 'approved' || statusLower === 'published');
     } else if (activeFilter === 'Rejected') {
-      matchesFilter = statusLower === 'rejected';
+      matchesFilter = recipe.isSubmission && statusLower === 'rejected';
     } else if (activeFilter === 'Update Review') {
-      matchesFilter = statusLower === 'update_under_review' || statusLower === 'update under review';
+      matchesFilter = recipe.isSubmission && (statusLower === 'update_under_review' || statusLower === 'update under review');
     }
 
     return matchesSearch && matchesFilter;
@@ -79,6 +131,30 @@ export const MyArchiveDashboard = ({ navigation }) => {
 
   const handleDelete = (id) => {
     deleteRecipe(id);
+    loadData();
+  };
+
+  const handleWithdraw = async (submissionId) => {
+    Alert.alert(
+      'Withdraw Submission',
+      'Are you sure you want to withdraw this recipe from review?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Withdraw',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await recipeSubmissionService.withdrawSubmission(submissionId);
+              Alert.alert('Success', 'Submission withdrawn successfully.');
+              loadData();
+            } catch (err) {
+              Alert.alert('Error', err.message || 'Failed to withdraw submission.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const getStatusBadgeStyle = (status) => {
@@ -87,6 +163,9 @@ export const MyArchiveDashboard = ({ navigation }) => {
       case 'approved':
       case 'published':
         return styles.badgePublished;
+      case 'submitted':
+      case 'resubmitted':
+      case 'under_review':
       case 'pending review':
       case 'pending_review':
       case 'update under review':
@@ -94,6 +173,8 @@ export const MyArchiveDashboard = ({ navigation }) => {
         return styles.badgePending;
       case 'rejected':
         return styles.badgeRejected;
+      case 'withdrawn':
+        return styles.badgeDraft;
       case 'needs changes':
       case 'changes_requested':
         return styles.badgeNeedsChanges;
@@ -242,43 +323,68 @@ export const MyArchiveDashboard = ({ navigation }) => {
                   <Text style={styles.localName} numberOfLines={1}>({item.localName})</Text>
                 ) : null}
 
+                {item.isSubmission && (
+                  <Text style={styles.refText}>Ref: {item.submissionReference}</Text>
+                )}
+
                 <Text style={styles.locationText} numberOfLines={1}>
                   📍 {item.region || 'Unknown State'}, {item.district || 'Unknown District'}
                 </Text>
 
                 <Text style={styles.dateText}>
-                  Submitted: {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}
+                  {item.isSubmission ? 'Submitted' : 'Last Saved'}: {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}
                 </Text>
+
+                {item.isSubmission && item.curatorFeedback ? (
+                  <View style={styles.feedbackContainer}>
+                    <Text style={styles.feedbackText} numberOfLines={2}>
+                      💬 Feedback: {item.curatorFeedback}
+                    </Text>
+                  </View>
+                ) : null}
 
                 {/* Quick actions panel */}
                 <View style={styles.actionsPanel}>
                   <TouchableOpacity
-                    onPress={() => navigation.navigate('MyRecipeDetails', { recipeId: item.id })}
+                    onPress={() => navigation.navigate('MyRecipeDetails', item.isSubmission ? { submissionId: item.submissionId } : { recipeId: item.id })}
                     style={styles.actionBtn}
                   >
                     <Text style={styles.actionText}>View</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate('EditRecipe', { recipeId: item.id })}
-                    style={styles.actionBtn}
-                  >
-                    <Text style={styles.actionText}>Edit</Text>
-                  </TouchableOpacity>
+                  {(!item.isSubmission || item.status === 'changes_requested') && (
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('EditRecipe', { recipeId: item.id })}
+                      style={styles.actionBtn}
+                    >
+                      <Text style={styles.actionText}>Edit</Text>
+                    </TouchableOpacity>
+                  )}
 
-                  <TouchableOpacity
-                    onPress={() => handleDuplicate(item.id)}
-                    style={styles.actionBtn}
-                  >
-                    <Text style={styles.actionText}>Duplicate</Text>
-                  </TouchableOpacity>
+                  {!item.isSubmission && (
+                    <TouchableOpacity
+                      onPress={() => handleDuplicate(item.id)}
+                      style={styles.actionBtn}
+                    >
+                      <Text style={styles.actionText}>Duplicate</Text>
+                    </TouchableOpacity>
+                  )}
 
-                  {item.status === 'Draft' && (
+                  {!item.isSubmission && (
                     <TouchableOpacity
                       onPress={() => handleDelete(item.id)}
                       style={[styles.actionBtn, styles.deleteBtn]}
                     >
                       <Text style={styles.deleteText}>Delete</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {item.isSubmission && (item.status === 'submitted' || item.status === 'resubmitted') && (
+                    <TouchableOpacity
+                      onPress={() => handleWithdraw(item.submissionId)}
+                      style={[styles.actionBtn, styles.withdrawBtn]}
+                    >
+                      <Text style={styles.withdrawText}>Withdraw</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -577,6 +683,32 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: '300',
     lineHeight: 32,
+  },
+  refText: {
+    ...FONTS.caption,
+    fontWeight: '600',
+    color: COLORS.textMuted,
+    marginTop: 2,
+  },
+  withdrawBtn: {
+    marginLeft: 'auto',
+  },
+  withdrawText: {
+    ...FONTS.caption,
+    fontWeight: '700',
+    color: COLORS.error,
+  },
+  feedbackContainer: {
+    backgroundColor: '#fffdf5',
+    borderColor: '#f5ebd0',
+    borderWidth: 1,
+    borderRadius: BORDERS.radiusSm,
+    padding: SPACING.xs,
+    marginTop: SPACING.xs,
+  },
+  feedbackText: {
+    ...FONTS.caption,
+    color: '#8f6d00',
   },
 });
 

@@ -45,12 +45,18 @@ export const DraftRecipesScreen = ({ navigation }) => {
 
   const handleContinueEditing = async (item) => {
     await saveRecipeDraft(item, item.currentStep);
-    navigation.navigate('AddRecipe', { screen: item.currentStep || 'RecipeIdentity' });
+    navigation.navigate('MainApp', {
+      screen: 'AddRecipe',
+      params: { screen: item.currentStep || 'RecipeIdentity' }
+    });
   };
 
   const handlePreviewDraft = async (item) => {
     await saveRecipeDraft(item, item.currentStep);
-    navigation.navigate('AddRecipe', { screen: 'RecipePreview' });
+    navigation.navigate('MainApp', {
+      screen: 'AddRecipe',
+      params: { screen: 'RecipePreview' }
+    });
   };
 
   const handleDeletePrompt = (draftId) => {
@@ -194,7 +200,7 @@ export const DraftRecipesScreen = ({ navigation }) => {
                 <Button
                   title="Add Heritage Recipe"
                   variant="primary"
-                  onPress={() => navigation.navigate('AddRecipe')}
+                  onPress={() => navigation.navigate('MainApp', { screen: 'AddRecipe' })}
                   style={styles.emptyBtn}
                 />
               </View>

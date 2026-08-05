@@ -7,8 +7,8 @@ export const recipeSubmissionService = {
   },
 
   // Save a new recipe submission
-  async submitRecipe(draft) {
-    return recipeApiService.submitRecipe(draft);
+  async submitRecipe(draft, declaration, consent, aiDisclosureConfirmed, idempotencyKey) {
+    return recipeApiService.submitRecipe(draft, declaration, consent, aiDisclosureConfirmed, idempotencyKey);
   }
 };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Image, TouchableOpacity, Alert } from 'react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import Header from '../../../shared/components/Header';
 import Button from '../../../shared/components/Button';
@@ -11,17 +11,59 @@ import TransitionView from '../../../shared/components/TransitionView';
 
 export const AddRecipeIntroScreen = ({ navigation }) => {
   const [draftCount, setDraftCount] = useState(0);
-  const { saveRecipeDraft, clearRecipeDraft } = useAuth();
+  const { recipeDraft, saveRecipeDraft, clearRecipeDraft } = useAuth();
 
-  // Monitor screen focus to update drafts counter
+  // Monitor screen focus to update drafts counter & recovery prompt
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       recipeDraftService.getAllDrafts().then((list) => {
         setDraftCount(list.length);
       });
+
+      // Prompt to recover unfinished scan draft
+      if (recipeDraft?.scan?.pages && recipeDraft.scan.pages.length > 0) {
+        Alert.alert(
+          'Unfinished Scanned Recipe',
+          'We found an unfinished scanned recipe. Would you like to continue?',
+          [
+            {
+              text: 'Continue',
+              onPress: () => {
+                const status = recipeDraft.scan.extractionStatus;
+                if (status === 'completed') {
+                  if (recipeDraft.missingFields && recipeDraft.missingFields.length > 0) {
+                    navigation.navigate('MissingFields', { draftPayload: recipeDraft });
+                  } else if (recipeDraft.scan.structuredResult) {
+                    navigation.navigate('StructuredRecipeReview', {
+                      rawText: recipeDraft.scan.correctedText || recipeDraft.scan.originalText,
+                      sourceImages: recipeDraft.scan.pages.map(p => p.uri),
+                      ocrConfidence: recipeDraft.confidence || 0.95
+                    });
+                  } else {
+                    navigation.navigate('OCRReview', { pages: recipeDraft.scan.pages });
+                  }
+                } else {
+                  navigation.navigate('RecipeImageImport');
+                }
+              }
+            },
+            {
+              text: 'Start New',
+              style: 'destructive',
+              onPress: async () => {
+                await clearRecipeDraft();
+              }
+            },
+            {
+              text: 'Cancel',
+              style: 'cancel'
+            }
+          ]
+        );
+      }
     });
     return unsubscribe;
-  }, [navigation]);
+  }, [navigation, recipeDraft]);
 
   const handleBegin = async () => {
     // Generate a fresh draft id and set to active context
@@ -31,12 +73,42 @@ export const AddRecipeIntroScreen = ({ navigation }) => {
       title: '',
       localName: '',
       nativeScript: '',
-      // englishName: '',
       altNames: '',
       history: '',
     };
     await saveRecipeDraft(freshDraft, 'RecipeIdentity');
     navigation.navigate('RecipeIdentity');
+  };
+
+  const handleScanBegin = async () => {
+    await clearRecipeDraft();
+    const freshDraft = {
+      draftId: `recipe-${Date.now()}`,
+      recipeId: `recipe-${Date.now()}`,
+      title: '',
+      localName: '',
+      nativeScript: '',
+      altNames: '',
+      history: '',
+      scan: {
+        pages: [],
+        extractionStatus: 'idle',
+        pageTranscriptions: [],
+        originalText: '',
+        correctedText: '',
+        detectedLanguages: [],
+        qualityWarnings: [],
+        structuredResult: null,
+        clarificationQuestions: [],
+        acceptedSuggestionIds: [],
+        rejectedSuggestionIds: [],
+        lastSavedAt: Date.now()
+      },
+      status: 'draft',
+      currentStep: 'RecipeImageImport'
+    };
+    await saveRecipeDraft(freshDraft, 'RecipeImageImport');
+    navigation.navigate('RecipeImageImport');
   };
 
   return (
@@ -104,11 +176,14 @@ export const AddRecipeIntroScreen = ({ navigation }) => {
         />
 
         <Button
-          title="Import Recipe from Image"
+          title="Scan a Heritage Recipe"
           variant="outline"
-          onPress={() => navigation.navigate('RecipeImageImport')}
+          onPress={handleScanBegin}
           style={styles.importButton}
         />
+        <Text style={styles.importSubText}>
+          Photograph a handwritten or printed recipe and transform it into an editable digital archive.
+        </Text>
       </ScrollView>
       </TransitionView>
     </SafeAreaView>
@@ -223,6 +298,15 @@ const styles = StyleSheet.create({
   importButton: {
     width: '100%',
     marginTop: 10,
+  },
+  importSubText: {
+    ...FONTS.caption,
+    fontSize: 11,
+    color: COLORS.textMuted,
+    textAlign: 'center',
+    marginTop: 6,
+    lineHeight: 15,
+    paddingHorizontal: SPACING.md,
   },
 });
 

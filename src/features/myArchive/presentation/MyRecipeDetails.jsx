@@ -8,23 +8,73 @@ import Card from '../../../shared/components/Card';
 import ExpandableSection from '../../../shared/components/ExpandableSection';
 import TransitionView from '../../../shared/components/TransitionView';
 
+import { useState, useEffect } from 'react';
+import { ActivityIndicator } from 'react-native';
+import { recipeSubmissionService } from '../../recipes/services/recipeSubmissionService';
 import { ALL_COLLECTIONS } from '../../collections/services/collectionsData';
 
 export const MyRecipeDetails = ({ route, navigation }) => {
-  const { recipeId } = route.params;
+  const { recipeId, submissionId } = route.params || {};
   const { myRecipes } = useAuth();
   
-  let recipe = myRecipes.find((r) => r.id === recipeId);
-  const isContributorRecipe = !!recipe;
+  const [recipe, setRecipe] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (!recipe) {
-    for (const col of ALL_COLLECTIONS) {
-      const found = col.recipes.find((r) => r.id === recipeId);
-      if (found) {
-        recipe = found;
-        break;
+  useEffect(() => {
+    const loadRecipe = async () => {
+      setIsLoading(true);
+      try {
+        if (submissionId) {
+          const sub = await recipeSubmissionService.getSubmissionById(submissionId);
+          if (sub) {
+            const activeSnap = sub.revisions && sub.revisions.length > 0 
+              ? sub.revisions[sub.revisions.length - 1].recipeSnapshot 
+              : {};
+            setRecipe({
+              ...activeSnap,
+              id: sub.submissionId,
+              status: sub.status,
+              createdAt: sub.createdAt || sub.submittedAt,
+              isSubmission: true,
+              submissionReference: sub.submissionReference,
+              reviewComments: sub.reviewComments || '',
+              statusHistory: sub.statusHistory || [],
+              revision: sub.revision
+            });
+          }
+        } else {
+          let found = myRecipes.find((r) => r.id === recipeId);
+          if (!found) {
+            for (const col of ALL_COLLECTIONS) {
+              const r = col.recipes.find((r) => r.id === recipeId);
+              if (r) {
+                found = r;
+                break;
+              }
+            }
+          }
+          if (found) {
+            setRecipe(found);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load recipe details', err);
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
+    loadRecipe();
+  }, [recipeId, submissionId, myRecipes]);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <Header title="Archival Detail" showBack={true} />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      </SafeAreaView>
+    );
   }
 
   if (!recipe) {
@@ -37,6 +87,8 @@ export const MyRecipeDetails = ({ route, navigation }) => {
       </SafeAreaView>
     );
   }
+
+  const isContributorRecipe = !recipe.isSubmission || recipe.status === 'Draft';
 
   const getStatusBadgeStyle = (status) => {
     const s = (status || '').toLowerCase();
@@ -186,7 +238,23 @@ export const MyRecipeDetails = ({ route, navigation }) => {
         </Card>
 
         {/* Admin Review Log */}
-        {recipe.reviewHistory && recipe.reviewHistory.length > 0 ? (
+        {recipe.statusHistory && recipe.statusHistory.length > 0 ? (
+          <Card variant="default" style={styles.sectionCard}>
+            <ExpandableSection title="ADMINISTRATIVE VERIFICATION LOG" initialExpanded={true}>
+              {recipe.statusHistory.map((log, index) => (
+                <View key={index} style={styles.logRow}>
+                  <View style={styles.logBullet} />
+                  <View style={styles.logContent}>
+                    <Text style={styles.logMeta}>
+                      Date: {new Date(log.timestamp).toLocaleDateString()} | Action: {log.newStatus.toUpperCase()}
+                    </Text>
+                    <Text style={styles.logNotes}>Actor: {log.actorRole} • Comments: {log.comment || 'None'}</Text>
+                  </View>
+                </View>
+              ))}
+            </ExpandableSection>
+          </Card>
+        ) : recipe.reviewHistory && recipe.reviewHistory.length > 0 ? (
           <Card variant="default" style={styles.sectionCard}>
             <ExpandableSection title="ADMINISTRATIVE VERIFICATION LOG" initialExpanded={false}>
               {recipe.reviewHistory.map((log, index) => (
@@ -205,14 +273,16 @@ export const MyRecipeDetails = ({ route, navigation }) => {
         ) : null}
 
         {/* Bottom Actions */}
-        {isContributorRecipe && (
+        {(isContributorRecipe || recipe.status === 'changes_requested') && (
           <View style={styles.buttonRow}>
-            <Button
-              title="View History"
-              variant="outline"
-              onPress={() => navigation.navigate('RecipeVersionHistory', { recipeId: recipe.id })}
-              style={styles.actionBtn}
-            />
+            {!recipe.isSubmission && (
+              <Button
+                title="View History"
+                variant="outline"
+                onPress={() => navigation.navigate('RecipeVersionHistory', { recipeId: recipe.id })}
+                style={styles.actionBtn}
+              />
+            )}
             <Button
               title="Edit Recipe"
               variant="primary"

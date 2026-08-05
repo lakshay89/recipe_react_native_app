@@ -1,5 +1,6 @@
 import offlineService from '../../../shared/services/offlineService';
 import { getAllIngredients, normalizeIngredientName } from './masterIngredientService';
+import { API_BASE_URL } from '../../../core/config/apiConfig';
 
 export const recipeParsingService = {
   /**
@@ -9,20 +10,22 @@ export const recipeParsingService = {
   async parseRecipeText(rawText) {
     if (offlineService.isConnected()) {
       try {
-        const response = await fetch('http://10.0.2.2:3000/api/v1/recipes/parse', {
+        const response = await fetch(`${API_BASE_URL}/api/v1/recipes/parse`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: rawText }),
+          body: JSON.stringify({
+            text: rawText,
+            source: 'image_scan',
+            allowSuggestions: true,
+            preserveOriginalLanguage: true
+          }),
         });
         
         if (response.ok) {
           const resJson = await response.json();
           if (resJson.success && resJson.data) {
-            // Post-process ingredients list to align with master database
-            const matchedIngredients = await this.alignIngredientsWithMaster(resJson.data.ingredients || []);
             return {
               ...resJson.data,
-              ingredientsList: matchedIngredients,
               isOfflineParsed: false,
             };
           }
@@ -45,7 +48,6 @@ export const recipeParsingService = {
       const extName = (item.name || '').trim();
       const normName = normalizeIngredientName(extName);
       
-      // Look for a close match in the master list
       const matched = masterList.find(m => {
         const mNorm = normalizeIngredientName(m.name);
         return mNorm === normName || (m.aliases || []).some(a => normalizeIngredientName(a) === normName);
@@ -62,7 +64,6 @@ export const recipeParsingService = {
         };
       }
 
-      // If no exact taxonomy match, create a custom category-less ingredient entry
       return {
         id: `custom-${Date.now()}-${idx}`,
         name: extName,
@@ -75,9 +76,6 @@ export const recipeParsingService = {
     });
   },
 
-  /**
-   * Guess unit based on text input matcher
-   */
   guessUnit(quantStr) {
     const qLower = quantStr.toLowerCase();
     if (qLower.includes('tsp') || qLower.includes('teaspoon')) return 'Teaspoon (tsp)';
@@ -92,7 +90,7 @@ export const recipeParsingService = {
   },
 
   /**
-   * Lightweight local parser using regex heuristics when offline
+   * Lightweight local parser using regex heuristics returning the structured schema layout
    */
   async parseLocalOffline(text) {
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
@@ -102,16 +100,14 @@ export const recipeParsingService = {
     let prepTime = '';
     let cookTime = '';
     let rawIngredients = [];
-    let cookingSteps = [];
+    let cookingStepsList = [];
     let region = '';
 
     let parsingSection = 'none';
 
-    // Basic heuristic regex checks
     for (const line of lines) {
       const lineLower = line.toLowerCase();
       
-      // Determine sections
       if (lineLower.includes('ingredients:') || lineLower.includes('सामग्री:')) {
         parsingSection = 'ingredients';
         continue;
@@ -120,7 +116,6 @@ export const recipeParsingService = {
         continue;
       }
 
-      // Extract general metadata
       if (!recipeName && lines.indexOf(line) === 0) {
         recipeName = line.replace(/recipe/gi, '').trim();
       }
@@ -137,9 +132,7 @@ export const recipeParsingService = {
       const regionMatch = line.match(/(?:region|state|गुजरात|पंजाब|उत्तर प्रदेश)\s*:\s*(\w+)/i);
       if (regionMatch) region = regionMatch[1];
 
-      // Parse lines by active section
       if (parsingSection === 'ingredients') {
-        // Match things like "- 250g Black Gram (Urad Dal)" or "- 2 tbsp Mustard Oil"
         const ingMatch = line.match(/^(?:-|\*|\d+)?\s*(\d+(?:\/\d+)?\s*(?:g|kg|ml|tsp|tbsp|cup|piece|gm|gram|tbsp|threads|litre|cup)s?)\s+(.+)/i);
         if (ingMatch) {
           rawIngredients.push({
@@ -149,7 +142,6 @@ export const recipeParsingService = {
             notes: '',
           });
         } else {
-          // Fallback simple line capture
           const cleanedName = line.replace(/^[-*•\d\s]+/g, '').trim();
           if (cleanedName.length > 2) {
             rawIngredients.push({
@@ -163,30 +155,67 @@ export const recipeParsingService = {
       } else if (parsingSection === 'method') {
         const stepText = line.replace(/^\d+[\.\s\-]+/g, '').trim();
         if (stepText.length > 5) {
-          cookingSteps.push(stepText);
+          cookingStepsList.push(stepText);
         }
       }
     }
 
     const aligned = await this.alignIngredientsWithMaster(rawIngredients);
+    const wrap = (val, provenance = 'extracted') => ({
+      value: val || '',
+      provenance: val ? provenance : 'missing',
+      confidence: 'high',
+      sourceEvidence: '',
+      suggestionReason: ''
+    });
+
+    const ingredients = aligned.map(ing => ({
+      name: wrap(ing.name),
+      quantity: wrap(ing.quantity),
+      unit: wrap(ing.unit, 'normalized'),
+      preparation: wrap(ing.notes)
+    }));
+
+    const cookingSteps = cookingStepsList.map((step, idx) => ({
+      stepText: wrap(step),
+      stepNumber: idx + 1
+    }));
 
     return {
-      title: recipeName || 'Untitled Offline Parse',
-      localName: scriptIsHindi(text) ? recipeName : '',
-      serves,
-      prepTime,
-      cookTime,
-      region,
-      state: region,
-      ingredientsList: aligned,
-      cookingStepsList: cookingSteps,
-      isOfflineParsed: true,
+      title: wrap(recipeName || 'Untitled Offline Parse'),
+      localName: wrap(scriptIsHindi(text) ? recipeName : ''),
+      nativeScript: wrap(scriptIsHindi(text) ? 'Devanagari' : ''),
+      servings: wrap(serves),
+      prepTime: wrap(prepTime),
+      cookTime: wrap(cookTime),
+      restingTime: wrap(''),
+      state: wrap(region),
+      district: wrap(''),
+      village: wrap(''),
+      traditionalCookware: wrap(''),
+      heritageSource: wrap(''),
+      sourcePerson: wrap(''),
+      sourceType: wrap(''),
+      culturalAssociation: wrap(''),
+      notes: wrap(''),
+      ingredients,
+      cookingSteps,
+      missingFields: ['title', 'state', 'prepTime', 'cookTime'].filter(f => {
+        if (f === 'title') return !recipeName;
+        if (f === 'state') return !region;
+        if (f === 'prepTime') return !prepTime;
+        if (f === 'cookTime') return !cookTime;
+        return false;
+      }),
+      aiSuggestions: [],
+      clarificationQuestions: [],
+      warnings: ['Offline mode: values parsed locally using heuristics.'],
+      isOfflineParsed: true
     };
   }
 };
 
 const scriptIsHindi = (text) => {
-  // Simple check for Devanagari range
   return /[\u0900-\u097F]/.test(text);
 };
 

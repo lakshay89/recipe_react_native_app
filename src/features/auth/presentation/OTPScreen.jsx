@@ -6,13 +6,17 @@ import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Header from '../../../shared/components/Header';
+import { recipeApiService } from '../../recipes/services/recipeApiService';
 
 export const OTPScreen = ({ route, navigation }) => {
   const { login } = useAuth();
   const { authData, flow = 'signup' } = route.params || { authData: { identifier: 'User' }, flow: 'signup' };
+  const [currentVerificationId, setCurrentVerificationId] = useState(authData.verificationId || '');
   const [otp, setOtp] = useState('');
   const [timer, setTimer] = useState(30);
   const [error, setError] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -22,38 +26,72 @@ export const OTPScreen = ({ route, navigation }) => {
   }, []);
 
   const handleVerify = async () => {
-    if (otp.length !== 4) {
-      setError('Please enter a valid 4-digit OTP');
+    if (otp.length !== 6) {
+      setError('Please enter a valid 6-digit OTP');
       return;
     }
 
-    if (otp === '1234') {
-      if (flow === 'forgot_password') {
-        navigation.replace('ResetPassword');
-      } else {
-        const userPayload = {
-          identifier: authData.identifier,
-          name: authData.name || '',
-          isProfileComplete: flow === 'signup' ? false : true,
-        };
+    setIsVerifying(true);
+    setError('');
 
-        await login(userPayload);
+    try {
+      await recipeApiService.verifyEmail(currentVerificationId, otp);
 
-        if (flow === 'signup') {
-          navigation.replace('ProfileSetup');
-        } else {
-          navigation.replace('MainApp');
+      // Automated login post-verification
+      if (authData.password) {
+        try {
+          await login(authData.identifier, authData.password);
+          setIsVerifying(false);
+          if (flow === 'signup') {
+            navigation.replace('ProfileSetup');
+          } else {
+            navigation.replace('MainApp');
+          }
+        } catch (loginErr) {
+          setIsVerifying(false);
+          Alert.alert(
+            'Verification Successful',
+            'Your account has been verified. Please log in with your credentials.',
+            [{ text: 'OK', onPress: () => navigation.navigate('Auth') }]
+          );
         }
+      } else {
+        setIsVerifying(false);
+        Alert.alert(
+          'Verification Successful',
+          'Your account has been verified. Please log in with your credentials.',
+          [{ text: 'OK', onPress: () => navigation.navigate('Auth') }]
+        );
       }
-    } else {
-      setError('Invalid OTP. Please enter the mock code 1234.');
+    } catch (err) {
+      setIsVerifying(false);
+      setError(err.message || 'OTP verification failed. Please try again.');
     }
   };
 
-  const handleResend = () => {
-    setTimer(30);
+  const handleResend = async () => {
+    setIsResending(true);
     setError('');
-    Alert.alert('OTP Sent', 'A mock verification code has been resent to your account.');
+
+    try {
+      const res = await recipeApiService.resendVerification(authData.identifier);
+      setIsResending(false);
+      
+      const newVerificationId = res.data?.verificationId || res.verificationId;
+      const developmentOtp = res.data?.developmentOtp || res.developmentOtp;
+
+      setCurrentVerificationId(newVerificationId);
+      setTimer(30);
+
+      Alert.alert('OTP Sent', 'A new verification code has been issued.');
+
+      if (developmentOtp) {
+        Alert.alert('Development Code', `OTP Code (Dev Mode): ${developmentOtp}`);
+      }
+    } catch (err) {
+      setIsResending(false);
+      Alert.alert('Error', err.message || 'Failed to resend verification code.');
+    }
   };
 
   return (
@@ -79,15 +117,15 @@ export const OTPScreen = ({ route, navigation }) => {
 
           {/* Styled centered OTP input container */}
           <Input
-            label="Verification Code (OTP)"
-            placeholder="e.g. 1234"
+            label="Verification Code (6-Digit OTP)"
+            placeholder="e.g. 123456"
             value={otp}
             onChangeText={(text) => {
               setError('');
               setOtp(text.replace(/[^0-9]/g, ''));
             }}
             keyboardType="number-pad"
-            maxLength={4}
+            maxLength={6}
             error={error}
             style={styles.otpInput}
             inputStyle={styles.textInputCentered}
@@ -97,7 +135,14 @@ export const OTPScreen = ({ route, navigation }) => {
             {timer > 0 ? (
               <Text style={styles.timerText}>Resend code in {timer}s</Text>
             ) : (
-              <Button title="Resend OTP" variant="text" onPress={handleResend} textStyle={styles.resendText} />
+              <Button
+                title="Resend OTP"
+                variant="text"
+                onPress={handleResend}
+                loading={isResending}
+                disabled={isVerifying || isResending}
+                textStyle={styles.resendText}
+              />
             )}
           </View>
 
@@ -105,6 +150,8 @@ export const OTPScreen = ({ route, navigation }) => {
             title="Verify & Continue"
             variant="primary"
             onPress={handleVerify}
+            loading={isVerifying}
+            disabled={isVerifying || isResending}
             style={styles.verifyButton}
           />
         </Card>

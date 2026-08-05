@@ -9,6 +9,7 @@ import Card from '../../../shared/components/Card';
 import AutocompleteInput from '../../../shared/components/AutocompleteInput';
 import recentCacheService from '../../../core/services/recentCacheService';
 import TransitionView from '../../../shared/components/TransitionView';
+import useNavigationGuard from '../../../shared/hooks/useNavigationGuard';
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 
@@ -27,6 +28,7 @@ const PRESET_LOCATIONS = [
 
 export const RecipeLocationScreen = ({ navigation }) => {
   const { recipeDraft, saveRecipeDraft } = useAuth();
+  useNavigationGuard(navigation);
   
   const [region, setRegion] = useState(''); // State / Region
   const [district, setDistrict] = useState('');

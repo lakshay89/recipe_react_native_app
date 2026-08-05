@@ -1,92 +1,227 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
-import { RefreshCw, Layout, Type, ChevronLeft, ChevronRight } from 'lucide-react-native';
-import { COLORS, FONTS, SPACING, SHADOWS } from '../../../core/theme/theme';
+import {
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Alert,
+  TextInput,
+  Platform
+} from 'react-native';
+import {
+  RefreshCw,
+  Layout,
+  Type,
+  ChevronLeft,
+  ChevronRight,
+  Save,
+  Languages,
+  AlertCircle
+} from 'lucide-react-native';
+import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import Header from '../../../shared/components/Header';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
-import OCRTextEditor from './components/OCRTextEditor';
 import ExtractionProgress from './components/ExtractionProgress';
-import recipeOCRService from '../services/recipeOCRService';
+import { useAuth } from '../../../shared/services/AuthContext';
+import { API_BASE_URL } from '../../../core/config/apiConfig';
+import { apiClient } from '../../../shared/services/apiClient';
 
 export const OCRReviewScreen = ({ route, navigation }) => {
-  const { pages } = route.params || { pages: [] };
-  const [selectedScript, setSelectedScript] = useState('latin'); // 'latin' or 'devanagari'
+  const { recipeDraft, saveRecipeDraft } = useAuth();
+  const { pages, sessionId } = route.params || { pages: [], sessionId: null };
+
   const [activePageIndex, setActivePageIndex] = useState(0);
-  
-  // OCR state
   const [isProcessing, setIsProcessing] = useState(false);
-  const [progressPage, setProgressPage] = useState(0);
-  const [progressText, setProgressText] = useState('');
-  const [ocrTexts, setOcrTexts] = useState({}); // { [pageId]: text }
-  const [ocrResults, setOcrResults] = useState({}); // Full result payload
+  const [progressPage, setProgressPage] = useState(1);
+  const [progressText, setProgressText] = useState('Preparing recipe pages...');
+  
+  // OCR Content States
+  const [pageTranscriptions, setPageTranscriptions] = useState([]); // Array of { pageNumber, text, detectedLanguages, uncertainSegments }
+  const [ocrTexts, setOcrTexts] = useState({}); // { [pageNumber]: text }
+  const [originalText, setOriginalText] = useState('');
+  const [correctedText, setCorrectedText] = useState('');
+  const [detectedLanguages, setDetectedLanguages] = useState([]);
+  
+  // Tab selector: 'split' or 'image' or 'text'
+  const [activeTab, setActiveTab] = useState('split');
 
-  // Panel display switcher: 'split' (side-by-side image/text tabbed) or 'image' or 'text'
-  const [activeTab, setActiveTab] = useState('split'); // 'image' or 'text' or 'split'
-
-  const runOCRScan = useCallback(async () => {
-    if (pages.length === 0) return;
+  const runImageExtraction = useCallback(async () => {
+    if (!sessionId) return;
     setIsProcessing(true);
-    const newTexts = {};
-    const newResults = {};
+    setProgressText('Extracting handwriting from recipe images...');
 
     try {
-      for (let i = 0; i < pages.length; i++) {
-        const page = pages[i];
-        setProgressPage(i + 1);
-        setProgressText(`Analyzing page ${i + 1} with ${selectedScript === 'devanagari' ? 'Hindi / Devanagari' : 'English / Latin'} script...`);
-        
-        const result = await recipeOCRService.recognizeText(page.uri, selectedScript);
-        newTexts[page.id] = result.text;
-        newResults[page.id] = result;
+      const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/recipe-imports/${sessionId}/process-ocr`, {
+        method: 'POST',
+        body: JSON.stringify({
+          ocrLanguageHint: 'hi' // default multilingual hint
+        })
+      });
+
+      const resJson = await response.json();
+
+      if (!response.ok) {
+        let msg = 'Failed to extract text from images.';
+        if (resJson.message) {
+          msg = resJson.message;
+        }
+        throw new Error(msg);
       }
-      
-      setOcrTexts(newTexts);
-      setOcrResults(newResults);
+
+      if (resJson.success && resJson.data) {
+        const data = resJson.data;
+        // Map rawOCR/correctedText from backend pages schema
+        const mappedPages = (data.pages || []).map(p => ({
+          pageNumber: p.pageNumber,
+          text: p.correctedText || p.rawOCR || '',
+          detectedLanguages: p.detectedLanguages || [],
+          uncertainSegments: p.uncertainSegments || []
+        }));
+
+        setPageTranscriptions(mappedPages);
+        
+        // Initialize editable texts mapping
+        const textMap = {};
+        mappedPages.forEach(p => {
+          textMap[p.pageNumber] = p.text || '';
+        });
+        setOcrTexts(textMap);
+        setOriginalText(data.rawOCRTextCombined || '');
+        setCorrectedText(data.correctedOCRTextCombined || '');
+        
+        const allLangs = Array.from(new Set(mappedPages.flatMap(p => p.detectedLanguages)));
+        setDetectedLanguages(allLangs);
+
+        // Save progress to active draft state
+        if (recipeDraft) {
+          const updated = {
+            ...recipeDraft,
+            scan: {
+              ...(recipeDraft.scan || {}),
+              pages: pages,
+              sessionId: sessionId,
+              extractionStatus: 'ocr_completed',
+              pageTranscriptions: mappedPages,
+              originalText: data.rawOCRTextCombined || '',
+              correctedText: data.correctedOCRTextCombined || '',
+              detectedLanguages: allLangs,
+              lastSavedAt: Date.now()
+            }
+          };
+          await saveRecipeDraft(updated, 'RecipeImageImport');
+        }
+      }
     } catch (e) {
-      Alert.alert('OCR Error', 'Failed to read text from one or more pages. You can manually type the recipe details.');
+      Alert.alert(
+        'Scan Failed',
+        e.message || 'An error occurred during text extraction. You can retry or write manually.',
+        [
+          { text: 'Write manually', onPress: () => navigation.navigate('RecipeIdentity') },
+          { text: 'Retry', onPress: () => runImageExtraction() }
+        ]
+      );
     } finally {
       setIsProcessing(false);
     }
-  }, [pages, selectedScript]);
+  }, [pages, sessionId, recipeDraft]);
 
-  // Trigger OCR sequential pipeline on mount or when script overrides
+  // Load pages on mount
   useEffect(() => {
-    runOCRScan();
-  }, [runOCRScan]);
-
-  const handleTextChange = (text) => {
-    const activePage = pages[activePageIndex];
-    if (activePage) {
-      setOcrTexts({
-        ...ocrTexts,
-        [activePage.id]: text,
+    if (recipeDraft?.scan?.extractionStatus === 'ocr_completed' && recipeDraft?.scan?.correctedText) {
+      // Re-load from saved completed draft
+      const scan = recipeDraft.scan;
+      setPageTranscriptions(scan.pageTranscriptions || []);
+      const textMap = {};
+      (scan.pageTranscriptions || []).forEach(p => {
+        textMap[p.pageNumber] = p.text || '';
       });
+      setOcrTexts(textMap);
+      setOriginalText(scan.originalText || '');
+      setCorrectedText(scan.correctedText || '');
+      setDetectedLanguages(scan.detectedLanguages || []);
+    } else {
+      // Trigger upload
+      runImageExtraction();
     }
-  };
+  }, []);
 
-  const handleScriptChange = (script) => {
-    setSelectedScript(script);
+  const handleTextChange = async (text) => {
+    const pageNum = activePageIndex + 1;
+    const nextOcrTexts = {
+      ...ocrTexts,
+      [pageNum]: text
+    };
+    setOcrTexts(nextOcrTexts);
+
+    // Calculate combined corrected text
+    const nextCombined = pages.map((p, idx) => nextOcrTexts[idx + 1] || '').join('\n\n').trim();
+    setCorrectedText(nextCombined);
+
+    // Debounce save draft
+    if (recipeDraft) {
+      const updated = {
+        ...recipeDraft,
+        scan: {
+          ...(recipeDraft.scan || {}),
+          correctedText: nextCombined,
+          pageTranscriptions: pageTranscriptions.map(p => p.pageNumber === pageNum ? { ...p, text } : p),
+          lastSavedAt: Date.now()
+        }
+      };
+      await saveRecipeDraft(updated, 'RecipeImageImport');
+    }
   };
 
   const handleNextStep = async () => {
-    // 1. Gather all reviewed text
-    const combinedText = pages.map(p => ocrTexts[p.id] || '').join('\n\n').trim();
-    if (!combinedText) {
-      Alert.alert('Empty content', 'Please review/correct text. We cannot structure an empty recipe.');
+    if (!correctedText.trim()) {
+      Alert.alert('Empty Text', 'Cannot parse empty recipe. Please enter the text.');
       return;
     }
 
-    // Pass to structured review screen
-    navigation.navigate('StructuredRecipeReview', {
-      rawText: combinedText,
-      sourceImages: pages.map(p => p.uri),
-      ocrConfidence: pages.reduce((acc, p) => acc + (ocrResults[p.id]?.confidence || 0.9), 0) / pages.length,
-    });
+    setIsProcessing(true);
+    setProgressText('Saving transcription corrections...');
+
+    try {
+      // Link page corrections to import session
+      const mappedPages = pages.map((p, idx) => ({
+        pageNumber: idx + 1,
+        correctedText: ocrTexts[idx + 1] || ''
+      }));
+
+      const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/recipe-imports/${sessionId}/transcription`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          correctedOCRTextCombined: correctedText,
+          pages: mappedPages
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save transcription updates on server.');
+      }
+
+      setIsProcessing(false);
+      navigation.navigate('StructuredRecipeReview', {
+        sessionId,
+        rawText: correctedText,
+        sourceImages: pages.map(p => p.uri),
+        ocrConfidence: 0.95
+      });
+    } catch (err) {
+      setIsProcessing(false);
+      console.error('Transcription save error:', err);
+      Alert.alert('Save Failed', err.message || 'Could not update corrected text.');
+    }
   };
 
   const activePage = pages[activePageIndex];
-  const activeText = activePage ? ocrTexts[activePage.id] || '' : '';
+  const activePageData = pageTranscriptions.find(p => p.pageNumber === (activePageIndex + 1));
+  const activeText = ocrTexts[activePageIndex + 1] || '';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -103,29 +238,22 @@ export const OCRReviewScreen = ({ route, navigation }) => {
         </View>
       ) : (
         <View style={{ flex: 1 }}>
-          {/* Script Options Segment control */}
-          <View style={styles.scriptSegmentBar}>
-            <TouchableOpacity
-              style={[styles.segmentBtn, selectedScript === 'latin' && styles.segmentActiveBtn]}
-              onPress={() => handleScriptChange('latin')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.segmentBtnText, selectedScript === 'latin' && styles.segmentActiveBtnText]}>
-                English / Latin
+          
+          {/* Metadata/Language Indicator row */}
+          <View style={styles.metaBadgeRow}>
+            <View style={styles.langBadge}>
+              <Languages size={13} color={COLORS.secondary} />
+              <Text style={styles.langText}>
+                Languages: {detectedLanguages.length > 0 ? detectedLanguages.join(', ').toUpperCase() : 'Detecting...'}
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.segmentBtn, selectedScript === 'devanagari' && styles.segmentActiveBtn]}
-              onPress={() => handleScriptChange('devanagari')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.segmentBtnText, selectedScript === 'devanagari' && styles.segmentActiveBtnText]}>
-                Hindi / Devanagari
-              </Text>
+            </View>
+            <TouchableOpacity style={styles.retryHeaderBtn} onPress={runImageExtraction}>
+              <RefreshCw size={11} color={COLORS.primary} />
+              <Text style={styles.retryHeaderText}>Re-scan All</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Tab switcher: Image vs Text vs Split */}
+          {/* Tab switches */}
           <View style={styles.panelTabs}>
             <TouchableOpacity
               style={[styles.panelTabBtn, activeTab === 'split' && styles.panelActiveTabBtn]}
@@ -139,39 +267,61 @@ export const OCRReviewScreen = ({ route, navigation }) => {
               onPress={() => setActiveTab('image')}
             >
               <Layout size={14} color={activeTab === 'image' ? COLORS.primary : COLORS.secondary} />
-              <Text style={[styles.panelTabText, activeTab === 'image' && styles.panelActiveTabText]}>Image View</Text>
+              <Text style={[styles.panelTabText, activeTab === 'image' && styles.panelActiveTabText]}>Image Only</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.panelTabBtn, activeTab === 'text' && styles.panelActiveTabBtn]}
               onPress={() => setActiveTab('text')}
             >
               <Type size={14} color={activeTab === 'text' ? COLORS.primary : COLORS.secondary} />
-              <Text style={[styles.panelTabText, activeTab === 'text' && styles.panelActiveTabText]}>Text Editor</Text>
+              <Text style={[styles.panelTabText, activeTab === 'text' && styles.panelActiveTabText]}>Text Only</Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            {/* Split Panel side-by-side or stacked depending on layout */}
+            
+            {/* Image Preview Block */}
             {(activeTab === 'split' || activeTab === 'image') && activePage && (
               <Card variant="default" style={styles.imageCard}>
                 <Image source={{ uri: activePage.uri }} style={styles.recipeImage} resizeMode="contain" />
               </Card>
             )}
 
+            {/* Editable OCR text blocks */}
             {(activeTab === 'split' || activeTab === 'text') && (
               <View style={styles.editorSection}>
-                <View style={styles.editorHeader}>
-                  <Text style={styles.editorTitle}>Extracted Text Page {activePageIndex + 1}</Text>
-                  <TouchableOpacity style={styles.retryBtn} onPress={runOCRScan} activeOpacity={0.8}>
-                    <RefreshCw size={12} color={COLORS.primary} style={styles.retryIcon} />
-                    <Text style={styles.retryText}>Retry OCR</Text>
-                  </TouchableOpacity>
+                <Text style={styles.editorTitle}>Extracted Text Page {activePageIndex + 1}</Text>
+                
+                {/* Uncertain segment warnings display */}
+                {activePageData?.uncertainSegments && activePageData.uncertainSegments.length > 0 && (
+                  <View style={styles.uncertainBox}>
+                    <AlertCircle size={14} color="#C55A11" />
+                    <View style={styles.uncertainContent}>
+                      <Text style={styles.uncertainTitle}>Uncertain segment detected:</Text>
+                      {activePageData.uncertainSegments.map((seg, sIdx) => (
+                        <Text key={sIdx} style={styles.uncertainText}>
+                          • "{seg.text}" ({seg.reason})
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                <View style={styles.textInputContainer}>
+                  <TextInput
+                    style={styles.textArea}
+                    value={activeText}
+                    onChangeText={handleTextChange}
+                    multiline={true}
+                    placeholder="Extracted recipe text will appear here. Edit as needed..."
+                    placeholderTextColor={COLORS.textMuted}
+                    textAlignVertical="top"
+                  />
                 </View>
-                <OCRTextEditor value={activeText} onChangeText={handleTextChange} />
               </View>
             )}
 
-            {/* Pagination Controls */}
+            {/* Bottom Pagination */}
             {pages.length > 1 && (
               <View style={styles.paginationRow}>
                 <TouchableOpacity
@@ -182,9 +332,11 @@ export const OCRReviewScreen = ({ route, navigation }) => {
                   <ChevronLeft size={16} color={COLORS.secondary} />
                   <Text style={styles.pageBtnText}>Prev Page</Text>
                 </TouchableOpacity>
+
                 <Text style={styles.pageIndicator}>
-                  {activePageIndex + 1} of {pages.length}
+                  Page {activePageIndex + 1} of {pages.length}
                 </Text>
+
                 <TouchableOpacity
                   style={[styles.pageBtn, activePageIndex === pages.length - 1 && styles.disabledPageBtn]}
                   disabled={activePageIndex === pages.length - 1}
@@ -195,12 +347,13 @@ export const OCRReviewScreen = ({ route, navigation }) => {
                 </TouchableOpacity>
               </View>
             )}
+
           </ScrollView>
 
-          {/* Footer Navigation */}
+          {/* Footer Forward Actions */}
           <View style={styles.footer}>
             <Button
-              title="Parse Recipe Fields"
+              title="Confirm & Parse Recipe"
               variant="primary"
               onPress={handleNextStep}
               style={styles.submitBtn}
@@ -222,35 +375,43 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: SPACING.lg,
   },
-  scriptSegmentBar: {
+  metaBadgeRow: {
     flexDirection: 'row',
-    backgroundColor: '#FAF5EE',
-    borderWidth: 1,
-    borderColor: '#ECE3D7',
-    borderRadius: 8,
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginHorizontal: SPACING.lg,
     marginTop: SPACING.md,
-    padding: 2,
   },
-  segmentBtn: {
-    flex: 1,
-    paddingVertical: 8,
+  langBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#FAF5EE',
+    borderWidth: 0.5,
+    borderColor: '#ECE3D7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 6,
+    gap: 4,
   },
-  segmentActiveBtn: {
-    backgroundColor: COLORS.white,
-    ...SHADOWS.soft,
-  },
-  segmentBtnText: {
+  langText: {
     ...FONTS.caption,
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.textMuted,
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: COLORS.secondary,
   },
-  segmentActiveBtnText: {
+  retryHeaderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  retryHeaderText: {
+    ...FONTS.caption,
+    fontSize: 11,
     color: COLORS.primary,
     fontWeight: '700',
+    textDecorationLine: 'underline',
   },
   panelTabs: {
     flexDirection: 'row',
@@ -303,35 +464,51 @@ const styles = StyleSheet.create({
   editorSection: {
     marginBottom: SPACING.md,
   },
-  editorHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
   editorTitle: {
     ...FONTS.bodyBold,
     fontSize: 13,
     color: COLORS.secondary,
+    marginBottom: 6,
   },
-  retryBtn: {
+  uncertainBox: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FAF0E6',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+    backgroundColor: '#FFF2CC',
+    borderColor: '#FFE699',
     borderWidth: 0.5,
-    borderColor: COLORS.primary,
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 10,
+    gap: 6,
   },
-  retryIcon: {
-    marginRight: 4,
+  uncertainContent: {
+    flex: 1,
   },
-  retryText: {
+  uncertainTitle: {
     ...FONTS.caption,
     fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.primary,
+    fontWeight: '800',
+    color: '#7F6000',
+  },
+  uncertainText: {
+    ...FONTS.caption,
+    fontSize: 10,
+    color: '#7F6000',
+  },
+  textInputContainer: {
+    backgroundColor: COLORS.white,
+    borderColor: '#ECE3D7',
+    borderWidth: 1,
+    borderRadius: 12,
+    minHeight: 180,
+    padding: 10,
+    ...SHADOWS.soft,
+  },
+  textArea: {
+    ...FONTS.body,
+    fontSize: 13,
+    lineHeight: 18,
+    color: COLORS.text,
+    minHeight: 160,
   },
   paginationRow: {
     flexDirection: 'row',

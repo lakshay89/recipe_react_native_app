@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, Platform, View } from 'react-native';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { Home, Search, BookPlus, Archive } from 'lucide-react-native';
 import Animated, {
   useSharedValue,
@@ -107,9 +108,19 @@ export const TabNavigator = () => {
             }
           },
         })}
-        options={{
-          tabBarLabel: 'Add Recipe',
-          tabBarIcon: RenderAddIcon,
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'AddRecipeIntro';
+          const isNestedRouteActive = routeName !== 'AddRecipeIntro';
+          return {
+            tabBarLabel: 'Add Recipe',
+            tabBarIcon: RenderAddIcon,
+            tabBarStyle: isNestedRouteActive
+              ? { display: 'none' }
+              : [
+                  styles.tabBar,
+                  { bottom: insets.bottom > 0 ? insets.bottom + 4 : 14 }
+                ]
+          };
         }}
       />
 

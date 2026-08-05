@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, StatusBar, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { User } from 'lucide-react-native';
@@ -8,6 +8,7 @@ import { useAuth } from '../../../shared/services/AuthContext';
 import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
+import { recipeApiService } from '../../recipes/services/recipeApiService';
 
 const GoogleIcon = () => (
   <Svg width="18" height="18" viewBox="0 0 24 24" style={{ marginRight: 10 }}>
@@ -37,8 +38,9 @@ const AppleIcon = () => (
 );
 
 export const LoginScreen = ({ navigation }) => {
-  const { login } = useAuth();
+  const { login, registerUser } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Login Form States
   const [loginIdentifier, setLoginIdentifier] = useState('');
@@ -76,8 +78,10 @@ export const LoginScreen = ({ navigation }) => {
       }
       if (!signupPassword.trim()) {
         newErrors.signupPassword = 'Password is required';
-      } else if (signupPassword.length < 6) {
-        newErrors.signupPassword = 'Password must be at least 6 characters';
+      } else if (signupPassword.length < 8) {
+        newErrors.signupPassword = 'Password must be at least 8 characters';
+      } else if (!/[A-Za-z]/.test(signupPassword) || !/\d/.test(signupPassword)) {
+        newErrors.signupPassword = 'Password must contain both letters and numbers';
       }
 
       if (!signupConfirmPassword.trim()) {
@@ -96,24 +100,77 @@ export const LoginScreen = ({ navigation }) => {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
+    setIsLoading(true);
 
     if (isLogin) {
-      const userPayload = {
-        identifier: loginIdentifier,
-        name: 'Heritage Contributor',
-        isProfileComplete: true,
-      };
-      await login(userPayload);
-      navigation.replace('MainApp');
+      try {
+        await login(loginIdentifier, loginPassword);
+        setIsLoading(false);
+        navigation.replace('MainApp');
+      } catch (err) {
+        setIsLoading(false);
+        const errMsg = err.message || '';
+        if (errMsg.toLowerCase().includes('verification') || errMsg.toLowerCase().includes('verified')) {
+          Alert.alert(
+            'Verification Required',
+            'Your email has not been verified yet. Click below to resend a verification code.',
+            [
+              {
+                text: 'Verify Now',
+                onPress: async () => {
+                  try {
+                    setIsLoading(true);
+                    const resendRes = await recipeApiService.resendVerification(loginIdentifier);
+                    setIsLoading(false);
+                    const newVerificationId = resendRes.data?.verificationId || resendRes.verificationId;
+                    const developmentOtp = resendRes.data?.developmentOtp || resendRes.developmentOtp;
+
+                    if (developmentOtp) {
+                      Alert.alert('Development Code', `OTP Code (Dev Mode): ${developmentOtp}`);
+                    }
+
+                    const authData = {
+                      identifier: loginIdentifier,
+                      verificationId: newVerificationId,
+                      developmentOtp,
+                      password: loginPassword,
+                    };
+                    navigation.navigate('OTP', { authData, flow: 'signup' });
+                  } catch (resendErr) {
+                    setIsLoading(false);
+                    Alert.alert('Error', resendErr.message || 'Failed to send verification code.');
+                  }
+                }
+              },
+              { text: 'Cancel', style: 'cancel' }
+            ]
+          );
+        } else {
+          Alert.alert('Login Failed', err.message || 'Check your credentials and try again.');
+        }
+      }
     } else {
-      const authData = {
-        identifier: signupEmail,
-        mobile: signupMobile,
-        name: signupName,
-        password: signupPassword,
-        isSignUp: true,
-      };
-      navigation.navigate('OTP', { authData, flow: 'signup' });
+      try {
+        const response = await registerUser(signupName, signupEmail, signupMobile, signupPassword);
+        setIsLoading(false);
+        const verificationId = response.data?.verificationId || response.verificationId;
+        const developmentOtp = response.data?.developmentOtp || response.developmentOtp;
+
+        if (developmentOtp) {
+          Alert.alert('Development Code', `OTP Code (Dev Mode): ${developmentOtp}`);
+        }
+
+        const authData = {
+          identifier: signupEmail,
+          verificationId,
+          developmentOtp,
+          password: signupPassword,
+        };
+        navigation.navigate('OTP', { authData, flow: 'signup' });
+      } catch (err) {
+        setIsLoading(false);
+        Alert.alert('Registration Failed', err.message || 'Failed to create your account. Please try again.');
+      }
     }
   };
 
@@ -267,6 +324,7 @@ export const LoginScreen = ({ navigation }) => {
               title={isLogin ? 'Enter the Archive' : 'Create Account'}
               variant="primary"
               onPress={handleSubmit}
+              loading={isLoading}
               style={styles.submitButton}
             />
           </Card>

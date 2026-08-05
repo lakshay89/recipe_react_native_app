@@ -14,13 +14,15 @@ import Header from '../../../shared/components/Header';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 
-export const RecipeSubmitSuccessScreen = ({ navigation }) => {
+export const RecipeSubmitSuccessScreen = ({ route, navigation }) => {
+  const { submissionReference } = route.params || { submissionReference: 'N/A' };
+
   const handleGoToArchive = () => {
     navigation.navigate('MainApp', { screen: 'MyArchive' });
   };
 
   const handleGoToPending = () => {
-    navigation.navigate('PendingReview');
+    navigation.navigate('MainApp', { screen: 'MyArchive' }); // Navigate to Archive list to see pending status
   };
 
   const circleScale = useSharedValue(0);
@@ -77,6 +79,10 @@ export const RecipeSubmitSuccessScreen = ({ navigation }) => {
             <Text style={styles.message}>
               Your regional recipe has been submitted for administrative review and cataloging.
             </Text>
+
+            <View style={styles.statusBadge}>
+              <Text style={styles.statusLabel}>REFERENCE: {submissionReference}</Text>
+            </View>
 
             <View style={styles.divider} />
 

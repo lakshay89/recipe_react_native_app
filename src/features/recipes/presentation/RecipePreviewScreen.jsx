@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Alert, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, StatusBar, SafeAreaView, ScrollView, Alert, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
 import { useAuth } from '../../../shared/services/AuthContext';
 import Header from '../../../shared/components/Header';
@@ -7,9 +7,160 @@ import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import { recipeDraftService } from '../services/recipeDraftService';
 import TransitionView from '../../../shared/components/TransitionView';
+import { offlineService } from '../../../shared/services/offlineService';
 
 export const RecipePreviewScreen = ({ navigation }) => {
   const { recipeDraft, addRecipe, clearRecipeDraft } = useAuth();
+
+  const [declaration, setDeclaration] = useState({
+    informationIsAccurate: true,
+    permissionToSubmit: true,
+    termsAccepted: true
+  });
+  const [consent, setConsent] = useState({
+    publicationPermission: true,
+    sourceAttributionPermission: true,
+    mediaUsagePermission: true
+  });
+  const [aiDisclosureConfirmed, setAiDisclosureConfirmed] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [missingFields, setMissingFields] = useState([]);
+  const [warningsConfirmed, setWarningsConfirmed] = useState(false);
+
+  const finishedImage = recipeDraft?.archiveImages?.find(img => img.uploaded || img.uri)?.uri 
+    || recipeDraft?.completedDishImage 
+    || recipeDraft?.heroImage;
+
+  const getImageUrl = (imgUri) => {
+    if (!imgUri) return null;
+    if (imgUri.startsWith('http') || imgUri.startsWith('file:') || imgUri.startsWith('content:')) {
+      return imgUri;
+    }
+    return `${API_BASE_URL}${imgUri.startsWith('/') ? '' : '/'}${imgUri}`;
+  };
+
+  const getConsistencyWarnings = () => {
+    const warnings = [];
+    if (!recipeDraft) return warnings;
+
+    const titleStr = (recipeDraft.title || '').toLowerCase();
+    
+    // 1. Title vs Image Mismatch Check
+    const hasSweetsImage = finishedImage && (
+      finishedImage.includes('sweets') || 
+      finishedImage.includes('sweet') || 
+      finishedImage.includes('dessert') || 
+      finishedImage.includes('jalebi') || 
+      finishedImage.includes('gulab')
+    );
+    if (titleStr.includes('biryani') && hasSweetsImage) {
+      warnings.push({
+        id: 'img_mismatch',
+        message: 'The selected finished-dish image appears to show sweets or desserts, which does not match the "Biryani" title.'
+      });
+    }
+
+    // 2. Title vs Ingredients Mismatch Check (Chicken Biryani example)
+    if (titleStr.includes('biryani')) {
+      const hasRice = recipeDraft.ingredientsList?.some(ing => {
+        const name = (ing.name || '').toLowerCase();
+        return name.includes('rice') || name.includes('chawal') || name.includes('basmati');
+      }) || (recipeDraft.ingredients || '').toLowerCase().includes('rice');
+
+      const hasMeat = recipeDraft.ingredientsList?.some(ing => {
+        const name = (ing.name || '').toLowerCase();
+        return name.includes('chicken') || name.includes('mutton') || name.includes('lamb') || name.includes('meat') || name.includes('egg');
+      }) || (recipeDraft.ingredients || '').toLowerCase().includes('chicken') || (recipeDraft.ingredients || '').toLowerCase().includes('meat');
+
+      if (!hasRice || !hasMeat) {
+        warnings.push({
+          id: 'ingredients_mismatch',
+          message: 'Recipe title mentions Biryani, but key ingredients (like rice or chicken/meat) are missing.'
+        });
+      }
+    }
+
+    // 3. Title vs Cooking Steps Mismatch Check (minced chicken kebabs steps vs biryani)
+    if (titleStr.includes('biryani')) {
+      const hasKebabSteps = recipeDraft.cookingStepsList?.some(step => {
+        const text = (step.detail || '').toLowerCase();
+        return text.includes('skewer') || text.includes('grill over') || text.includes('tawa') || text.includes('minced chicken') || text.includes('kebab');
+      }) || (recipeDraft.instructions || '').toLowerCase().includes('skewer') || (recipeDraft.instructions || '').toLowerCase().includes('minced chicken');
+
+      if (hasKebabSteps) {
+        warnings.push({
+          id: 'method_mismatch',
+          message: 'The cooking steps describe kebab preparation (e.g. skewers, grilling minced meat), which contradicts the "Biryani" title.'
+        });
+      }
+    }
+
+    // 4. Servings vs Ingredients Quantities Check
+    if (recipeDraft.serves) {
+      const hasQuantities = recipeDraft.ingredientsList?.some(ing => ing.quantity && ing.quantity.trim());
+      if (recipeDraft.ingredientsList?.length > 0 && !hasQuantities) {
+        warnings.push({
+          id: 'servings_quantities',
+          message: 'Servings count is defined, but ingredient quantities are empty.'
+        });
+      }
+    }
+
+    // 5. Preparation & Cooking Times Check
+    const prep = parseInt(recipeDraft.prepTime || '0', 10);
+    const cook = parseInt(recipeDraft.cookTime || '0', 10);
+    if ((prep + cook) < 5) {
+      warnings.push({
+        id: 'timing_mismatch',
+        message: 'The preparation and cooking times (less than 5 minutes) seem too short for this recipe method.'
+      });
+    }
+
+    // 6. Location & Cultural check
+    if ((recipeDraft.region || '').toLowerCase() === 'kerala' && titleStr.includes('biryani')) {
+      const isMalabar = titleStr.includes('malabar') || titleStr.includes('thalassery') || (recipeDraft.history || '').toLowerCase().includes('malabar') || (recipeDraft.history || '').toLowerCase().includes('thalassery');
+      if (!isMalabar) {
+        warnings.push({
+          id: 'cultural_mismatch',
+          message: 'Please confirm the heritage tradition matches the state of origin (Kerala).'
+        });
+      }
+    }
+
+    return warnings;
+  };
+
+  useEffect(() => {
+    if (recipeDraft) {
+      const missing = [];
+      if (!recipeDraft.title || !recipeDraft.title.trim()) {
+        missing.push({ field: 'title', label: 'Recipe Title', screen: 'RecipeIdentity' });
+      }
+      if (!recipeDraft.region || !recipeDraft.region.trim()) {
+        missing.push({ field: 'state', label: 'State of Origin', screen: 'RecipeLocation' });
+      }
+      if (!recipeDraft.district || !recipeDraft.district.trim()) {
+        missing.push({ field: 'district', label: 'District of Origin', screen: 'RecipeLocation' });
+      }
+      if (!recipeDraft.ingredientsList || recipeDraft.ingredientsList.length === 0) {
+        missing.push({ field: 'ingredients', label: 'At Least One Ingredient', screen: 'RecipeIngredients' });
+      }
+      if (!recipeDraft.cookingStepsList || recipeDraft.cookingStepsList.length === 0) {
+        missing.push({ field: 'steps', label: 'At Least One Cooking Step', screen: 'RecipeCookingMethod' });
+      }
+      const hasSource = recipeDraft.heritageSource || recipeDraft.whoTaughtYou;
+      if (!hasSource) {
+        missing.push({ field: 'source', label: 'Heritage Source / Teacher', screen: 'RecipeHeritageSource' });
+      }
+      const hasImg = recipeDraft?.archiveImages?.find(img => img.uploaded || img.uri)?.uri 
+        || recipeDraft?.completedDishImage 
+        || recipeDraft?.heroImage;
+      if (!hasImg) {
+        missing.push({ field: 'finishedImage', label: 'Finished Recipe Image', screen: 'RecipeMediaUpload' });
+      }
+      setMissingFields(missing);
+    }
+  }, [recipeDraft]);
 
   const handleSaveDraftOnly = async () => {
     if (recipeDraft) {
@@ -28,36 +179,62 @@ export const RecipePreviewScreen = ({ navigation }) => {
       return;
     }
 
-    // Submit recipe to archives
-    const newRecipe = await addRecipe({
-      title: recipeDraft.title,
-      region: recipeDraft.region || '',
-      district: recipeDraft.district || '',
-      history: recipeDraft.history || '', // Story/heritage
-      ingredients: recipeDraft.ingredients || '',
-      instructions: recipeDraft.instructions || '',
-      heritageSource: recipeDraft.heritageSource || '',
-      prepTime: recipeDraft.prepTime || '',
-      cookTime: recipeDraft.cookTime || '',
-      totalTime: recipeDraft.totalTime || '',
-      serves: recipeDraft.serves || '4',
-      // Attach mock cover path if selected
-      coverImage: recipeDraft.hasHero ? 'thali.png' : 'sweets.png',
-      heatSource: recipeDraft.heatSource || '',
-      cookware: recipeDraft.cookingVessel || '', // Match native key name cookingVessel
-      prepStepsList: recipeDraft.prepStepsList || [],
-      cookingStepsList: recipeDraft.cookingStepsList || [],
-    });
+    if (missingFields.length > 0) {
+      Alert.alert('Incomplete Recipe', 'Please fill in all required fields before submitting.');
+      return;
+    }
 
-    if (newRecipe) {
-      // Clear draft in context and list storage
-      if (recipeDraft.draftId) {
-        await recipeDraftService.deleteDraft(recipeDraft.draftId);
+    const warnings = getConsistencyWarnings();
+    if (warnings.length > 0 && !warningsConfirmed) {
+      Alert.alert(
+        'Consistency Mismatches',
+        'We found potential mismatches in your recipe details. Please review the warnings and confirm they are correct before submitting.',
+        [{ text: 'Review' }]
+      );
+      return;
+    }
+
+    if (!declaration.informationIsAccurate || !declaration.permissionToSubmit || !declaration.termsAccepted) {
+      Alert.alert('Declarations Required', 'Please accept all declarations before submitting.');
+      return;
+    }
+
+    if (!consent.publicationPermission || !consent.sourceAttributionPermission) {
+      Alert.alert('Consent Required', 'Please accept publication and source attribution permissions.');
+      return;
+    }
+
+    if (!offlineService.isConnected()) {
+      Alert.alert(
+        'Offline Mode',
+        'Your draft is saved on this device. Connect to the internet to submit it for review.'
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const newRecipe = await addRecipe(
+        recipeDraft,
+        declaration,
+        consent,
+        aiDisclosureConfirmed,
+        `idemp-${recipeDraft.draftId || Date.now()}-${Date.now()}`
+      );
+
+      if (newRecipe) {
+        if (recipeDraft.draftId) {
+          await recipeDraftService.deleteDraft(recipeDraft.draftId);
+        }
+        await clearRecipeDraft();
+        navigation.navigate('RecipeSubmitSuccess', { submissionReference: newRecipe.submissionReference });
+      } else {
+        Alert.alert('Error', 'Submission failed. Please try again.');
       }
-      await clearRecipeDraft();
-      navigation.navigate('RecipeSubmitSuccess');
-    } else {
-      Alert.alert('Error', 'Submission failed. Please try again.');
+    } catch (e) {
+      Alert.alert('Submission Failed', e.message || 'An error occurred during submission.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -80,7 +257,13 @@ export const RecipePreviewScreen = ({ navigation }) => {
 
         {/* Cover visual overlay */}
         <View style={styles.coverContainer}>
-          {hasHero ? (
+          {finishedImage ? (
+            <Image
+              source={{ uri: getImageUrl(finishedImage) }}
+              style={styles.coverImage}
+              resizeMode="cover"
+            />
+          ) : hasHero ? (
             <Image
               source={require('../../../assets/images/thali.png')}
               style={styles.coverImage}
@@ -100,6 +283,27 @@ export const RecipePreviewScreen = ({ navigation }) => {
             <Text style={styles.badgeText}>PENDING REVIEW</Text>
           </View>
         </View>
+
+        {/* Consistency Mismatch Warnings Card */}
+        {getConsistencyWarnings().length > 0 && !warningsConfirmed && (
+          <Card variant="default" style={styles.warningCardYellow}>
+            <Text style={styles.warningTitleYellow}>⚠️ Recipe Consistency Warnings</Text>
+            <Text style={styles.warningDesc}>
+              Our automated system detected potential mismatches. Please verify:
+            </Text>
+            {getConsistencyWarnings().map((item, idx) => (
+              <Text key={idx} style={styles.warningItemLabelYellow}>
+                • {item.message}
+              </Text>
+            ))}
+            <TouchableOpacity
+              style={styles.confirmWarningsBtn}
+              onPress={() => setWarningsConfirmed(true)}
+            >
+              <Text style={styles.confirmWarningsBtnText}>I Confirm Recipe Details are Correct</Text>
+            </TouchableOpacity>
+          </Card>
+        )}
 
         {/* Recipe Title & Metadata */}
         <Text style={styles.recipeTitle}>{recipeDraft?.title || 'Untitled Recipe'}</Text>
@@ -131,9 +335,17 @@ export const RecipePreviewScreen = ({ navigation }) => {
         {/* Dynamic Ingredients Plaque Card */}
         <Card variant="default" style={styles.contentCard}>
           <Text style={styles.cardSectionLabel}>INGREDIENTS (Serves - {recipeDraft?.serves || '4'})</Text>
-          <Text style={styles.ingredientsBody}>
-            {recipeDraft?.ingredients || 'No ingredients listed.'}
-          </Text>
+          {recipeDraft?.ingredientsList && recipeDraft.ingredientsList.length > 0 ? (
+            recipeDraft.ingredientsList.map((ing, idx) => (
+              <Text key={`ing-${idx}`} style={styles.ingredientsItemText}>
+                • {ing.quantity ? `${ing.quantity} ` : ''}{ing.unit ? `${ing.unit} ` : ''}{ing.name || ''}{ing.notes ? ` (${ing.notes})` : ''}
+              </Text>
+            ))
+          ) : (
+            <Text style={styles.ingredientsBody}>
+              {recipeDraft?.ingredients || 'No ingredients listed.'}
+            </Text>
+          )}
         </Card>
 
         {/* Method & Timings */}
@@ -189,26 +401,81 @@ export const RecipePreviewScreen = ({ navigation }) => {
           )}
         </Card>
 
+        {/* Missing Required Fields Block */}
+        {missingFields.length > 0 && (
+          <Card variant="default" style={styles.warningCard}>
+            <Text style={styles.warningTitle}>⚠️ Incomplete Information</Text>
+            <Text style={styles.warningDesc}>
+              The following required fields must be complete before submitting:
+            </Text>
+            {missingFields.map((item, idx) => (
+              <TouchableOpacity
+                key={idx}
+                onPress={() => navigation.navigate(item.screen)}
+                style={styles.missingItemRow}
+              >
+                <Text style={styles.missingItemLabel}>• {item.label}</Text>
+                <Text style={styles.fixLink}>Fix →</Text>
+              </TouchableOpacity>
+            ))}
+          </Card>
+        )}
+
+        {/* Declarations & Consents Plaque Card */}
+        <Card variant="default" style={styles.contentCard}>
+          <Text style={styles.cardSectionLabel}>CONTRIBUTOR DECLARATION</Text>
+          <BulletTextRow label="I declare that all recipe details and historical context provided are accurate to the best of my knowledge." />
+          <BulletTextRow label="I declare that I have obtained all necessary permissions from the source community or family to submit this recipe." />
+          <BulletTextRow label="I accept the Terms and Conditions and contributor policies of Edible India." />
+
+          <View style={styles.separator} />
+
+          <Text style={styles.cardSectionLabel}>PUBLICATION CONSENT</Text>
+          <BulletTextRow label="I consent to the public preservation and digital archiving of this recipe on the Edible India Atlas." />
+          <BulletTextRow label="I consent to source attribution and acknowledgement of the source family/tribe/community." />
+          <BulletTextRow label="I consent to public display of the uploaded media assets for educational/cultural use." />
+
+          <View style={styles.separator} />
+
+          <Text style={styles.cardSectionLabel}>AI USE & DISCLOSURE</Text>
+          <BulletTextRow label="I confirm that AI tools were only used for structured extraction or digital OCR cleanup, and the factual history remains independently verified." />
+        </Card>
+
         {/* Action button row */}
-        <View style={styles.buttonRow}>
-          <Button
-            title="Save Draft"
-            variant="outline"
-            onPress={handleSaveDraftOnly}
-            style={styles.actionBtn}
-          />
-          <Button
-            title="Submit"
-            variant="primary"
-            onPress={handleSubmit}
-            style={styles.actionBtn}
-          />
-        </View>
+        {isSubmitting ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text style={styles.loadingText}>Submitting to heritage archives...</Text>
+          </View>
+        ) : (
+          <View style={styles.buttonRow}>
+            <Button
+              title="Save Draft"
+              variant="outline"
+              onPress={handleSaveDraftOnly}
+              style={styles.actionBtn}
+            />
+            <Button
+              title="Submit"
+              variant="primary"
+              onPress={handleSubmit}
+              style={styles.actionBtn}
+              disabled={missingFields.length > 0}
+            />
+          </View>
+        )}
       </ScrollView>
       </TransitionView>
     </SafeAreaView>
   );
 };
+
+const BulletTextRow = ({ label }) => (
+  <View style={styles.bulletRow}>
+    <Text style={styles.bulletSymbol}>•</Text>
+    <Text style={styles.bulletLabel}>{label}</Text>
+  </View>
+);
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -405,6 +672,117 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     flex: 1,
+  },
+  bulletRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginVertical: 4,
+    paddingRight: SPACING.md,
+  },
+  bulletSymbol: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginRight: SPACING.sm,
+    lineHeight: 17,
+  },
+  bulletLabel: {
+    ...FONTS.body,
+    fontSize: 12.5,
+    color: COLORS.text,
+    lineHeight: 17,
+    flex: 1,
+  },
+  warningCard: {
+    padding: SPACING.md,
+    backgroundColor: '#fff5f5',
+    borderColor: '#ffcdd2',
+    borderWidth: 1,
+    marginBottom: SPACING.md,
+  },
+  warningTitle: {
+    ...FONTS.titleMedium,
+    fontSize: 16,
+    color: COLORS.error,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  warningDesc: {
+    ...FONTS.body,
+    fontSize: 13,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+  },
+  missingItemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#ffebee',
+  },
+  missingItemLabel: {
+    ...FONTS.bodyBold,
+    fontSize: 13,
+    color: COLORS.text,
+  },
+  fixLink: {
+    ...FONTS.bodyBold,
+    fontSize: 13,
+    color: COLORS.primary,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.lg,
+    marginTop: SPACING.xl,
+  },
+  loadingText: {
+    ...FONTS.bodyMedium,
+    fontSize: 14,
+    color: COLORS.primary,
+    marginTop: SPACING.sm,
+  },
+  ingredientsItemText: {
+    ...FONTS.body,
+    fontSize: 14,
+    color: COLORS.text,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  warningCardYellow: {
+    padding: SPACING.md,
+    backgroundColor: '#fffdf0',
+    borderColor: '#ffe082',
+    borderWidth: 1,
+    borderRadius: BORDERS.radiusMd,
+    marginBottom: SPACING.md,
+  },
+  warningTitleYellow: {
+    ...FONTS.titleMedium,
+    fontSize: 16,
+    color: '#b78103',
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  warningItemLabelYellow: {
+    ...FONTS.body,
+    fontSize: 13,
+    color: COLORS.text,
+    lineHeight: 18,
+    marginVertical: 4,
+  },
+  confirmWarningsBtn: {
+    backgroundColor: '#ffe082',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: BORDERS.radiusMd,
+    alignItems: 'center',
+    marginTop: SPACING.md,
+  },
+  confirmWarningsBtnText: {
+    ...FONTS.bodyBold,
+    fontSize: 13,
+    color: '#5d4037',
   },
 });
 

@@ -82,7 +82,7 @@ export const PendingReviewScreen = ({ navigation }) => {
             <Button
               title="Add Heritage Recipe"
               variant="primary"
-              onPress={() => navigation.navigate('AddRecipe')}
+              onPress={() => navigation.navigate('MainApp', { screen: 'AddRecipe' })}
               style={styles.emptyBtn}
             />
           </View>

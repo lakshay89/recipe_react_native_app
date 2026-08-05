@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { offlineService } from '../../../shared/services/offlineService';
+import { API_BASE_URL } from '../../../core/config/apiConfig';
+import { apiClient } from '../../../shared/services/apiClient';
 
 const DRAFTS_KEY = '@edible_india_recipe_drafts_list';
 const RECIPES_KEY = '@edible_india_recipes';
@@ -68,7 +70,15 @@ export const recipeApiService = {
         traditionalTips: data.traditionalTips || '',
         ...(data.metadata || {})
       },
-      
+
+      // Preserve scan properties and disclosures
+      scan: data.scan || null,
+      originalScanSourceMetadata: data.originalScanSourceMetadata || (data.scan ? data.scan.pages : null),
+      originalOCRText: data.originalOCRText || data.scan?.originalText || '',
+      correctedOCRText: data.correctedOCRText || data.scan?.correctedText || '',
+      acceptedAISuggestions: data.acceptedAISuggestions || data.scan?.acceptedSuggestionIds || [],
+      aiDisclosure: data.aiDisclosure !== undefined ? data.aiDisclosure : !!data.scan,
+
       // Pass-through legacy fields for existing UI component compatibility
       id: data.id || data.recipeId || Date.now().toString(),
       localName: data.localName || data.nativeName || '',
@@ -96,11 +106,38 @@ export const recipeApiService = {
 
   async createRecipeDraft(draftData) {
     try {
-      const drafts = await this.getRecipeDrafts();
       const newDraft = this.mapStandardizedModel(draftData, 'draft');
       newDraft.draftId = newDraft.recipeId;
+
+      // Save locally first
+      const drafts = await this.getLocalRecipeDrafts();
       drafts.push(newDraft);
       await AsyncStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+
+      // Sync with backend if online
+      if (offlineService.isConnected()) {
+        try {
+          const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/recipes/drafts`, {
+            method: 'POST',
+            body: JSON.stringify(newDraft)
+          });
+          if (response.ok) {
+            const resJson = await response.json();
+            if (resJson.success && resJson.data) {
+              // Update local draft with backend's returned document
+              const idx = drafts.findIndex(d => d.draftId === newDraft.draftId);
+              if (idx !== -1) {
+                drafts[idx] = resJson.data;
+                await AsyncStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+              }
+              return resJson.data;
+            }
+          }
+        } catch (syncErr) {
+          console.warn('Backend sync failed during create draft, relying on offline cache', syncErr);
+        }
+      }
+
       return newDraft;
     } catch (e) {
       console.error('Error creating recipe draft', e);
@@ -110,10 +147,9 @@ export const recipeApiService = {
 
   async updateRecipeDraft(recipeId, draftData) {
     try {
-      const drafts = await this.getRecipeDrafts();
+      const drafts = await this.getLocalRecipeDrafts();
       const index = drafts.findIndex(d => d.recipeId === recipeId || d.draftId === recipeId);
       if (index === -1) {
-        // Fallback: create draft if not exists
         return this.createRecipeDraft(draftData);
       }
       const updated = this.mapStandardizedModel({ ...drafts[index], ...draftData }, 'draft');
@@ -121,6 +157,30 @@ export const recipeApiService = {
       updated.recipeId = recipeId;
       drafts[index] = updated;
       await AsyncStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+
+      // Sync with backend if online
+      if (offlineService.isConnected()) {
+        try {
+          const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/recipes/drafts`, {
+            method: 'POST',
+            body: JSON.stringify(updated)
+          });
+          if (response.ok) {
+            const resJson = await response.json();
+            if (resJson.success && resJson.data) {
+              const idx = drafts.findIndex(d => d.draftId === recipeId);
+              if (idx !== -1) {
+                drafts[idx] = resJson.data;
+                await AsyncStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+              }
+              return resJson.data;
+            }
+          }
+        } catch (syncErr) {
+          console.warn('Backend sync failed during update draft, relying on offline cache', syncErr);
+        }
+      }
+
       return updated;
     } catch (e) {
       console.error('Error updating recipe draft', e);
@@ -128,21 +188,61 @@ export const recipeApiService = {
     }
   },
 
-  async getRecipeDrafts() {
+  async getLocalRecipeDrafts() {
     try {
       const stored = await AsyncStorage.getItem(DRAFTS_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (e) {
-      console.error('Error fetching recipe drafts list', e);
       return [];
+    }
+  },
+
+  async getRecipeDrafts() {
+    try {
+      // If online, fetch from backend and sync/update the local cache
+      if (offlineService.isConnected()) {
+        try {
+          const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/recipes/drafts`);
+          if (response.ok) {
+            const resJson = await response.json();
+            if (resJson.success && Array.isArray(resJson.data)) {
+              await AsyncStorage.setItem(DRAFTS_KEY, JSON.stringify(resJson.data));
+              return resJson.data;
+            }
+          }
+        } catch (syncErr) {
+          console.warn('Backend fetch failed during getRecipeDrafts, falling back to local cache', syncErr);
+        }
+      }
+
+      // Offline fallback
+      return this.getLocalRecipeDrafts();
+    } catch (e) {
+      console.error('Error fetching recipe drafts list', e);
+      return this.getLocalRecipeDrafts();
     }
   },
 
   async deleteRecipeDraft(recipeId) {
     try {
-      const drafts = await this.getRecipeDrafts();
+      const drafts = await this.getLocalRecipeDrafts();
       const filtered = drafts.filter(d => d.recipeId !== recipeId && d.draftId !== recipeId);
       await AsyncStorage.setItem(DRAFTS_KEY, JSON.stringify(filtered));
+
+      // Sync delete with backend if online
+      if (offlineService.isConnected()) {
+        try {
+          const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/recipes/drafts/${recipeId}`, {
+            method: 'DELETE'
+          });
+          if (!response.ok) {
+            console.warn('Failed to delete draft from backend database, will clear on next sync');
+          }
+        } catch (syncErr) {
+          console.warn('Backend sync failed during delete draft, relying on offline cache', syncErr);
+        }
+      }
+
       return true;
     } catch (e) {
       console.error('Error deleting recipe draft', e);
@@ -150,55 +250,177 @@ export const recipeApiService = {
     }
   },
 
-  async submitRecipe(draftData) {
+
+  async submitRecipe(draftData, declaration, consent, aiDisclosureConfirmed, idempotencyKey) {
     try {
-      const now = new Date().toISOString();
-      const online = offlineService.isConnected();
-      const targetStatus = online ? 'Pending Review' : 'Waiting for Internet';
-      
-      const submission = this.mapStandardizedModel(draftData, targetStatus);
-      submission.submittedAt = now;
-      if (!online) {
-        submission.curatorStatus = 'waiting_for_internet';
-        submission.reviewNotes = 'Pending internet connection to sync.';
-      } else {
-        submission.curatorStatus = 'pending_review';
-        submission.reviewNotes = 'Heritage experts pending review.';
+      const draftId = draftData.draftId || draftData.recipeId;
+      const draftVersion = draftData.version || 1;
+
+      if (!offlineService.isConnected()) {
+        throw new Error('Your draft is saved on this device. Connect to the internet to submit it for review.');
       }
 
-      // Save to submissions list
-      const submissions = await this.getSubmissionsList();
-      submissions.push(submission);
-      await AsyncStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(submissions));
+      const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/recipe-drafts/${draftId}/submit`, {
+        method: 'POST',
+        body: JSON.stringify({
+          draftVersion,
+          idempotencyKey: idempotencyKey || `idemp-${draftId}-${Date.now()}`,
+          declaration: declaration || { informationIsAccurate: true, permissionToSubmit: true, termsAccepted: true },
+          consent: consent || { publicationPermission: true, sourceAttributionPermission: true, mediaUsagePermission: true },
+          aiDisclosureConfirmed: aiDisclosureConfirmed !== undefined ? aiDisclosureConfirmed : true
+        })
+      });
 
-      // Sync to general recipes list
-      const storedRecipes = await AsyncStorage.getItem(RECIPES_KEY);
-      const recipes = storedRecipes ? JSON.parse(storedRecipes) : [];
-      const index = recipes.findIndex(r => r.recipeId === submission.recipeId || r.id === submission.id);
-      if (index > -1) {
-        recipes[index] = submission;
-      } else {
-        recipes.unshift(submission);
+      if (!response.ok) {
+        const resErr = await response.json();
+        throw new Error(resErr.message || (resErr.error && resErr.error.message) || 'Submission failed');
       }
-      await AsyncStorage.setItem(RECIPES_KEY, JSON.stringify(recipes));
 
-      // Discard active drafts
-      await this.deleteRecipeDraft(draftData.draftId || draftData.recipeId);
+      const resJson = await response.json();
+      if (resJson.success && resJson.data) {
+        // Discard local draft
+        await this.deleteRecipeDraft(draftId);
 
-      return submission;
+        // Save to local submissions list
+        const submissions = await this.getSubmissionsList();
+        const serverSub = resJson.data;
+        const idx = submissions.findIndex(s => s.submissionId === serverSub.submissionId);
+        if (idx > -1) {
+          submissions[idx] = serverSub;
+        } else {
+          submissions.unshift(serverSub);
+        }
+        await AsyncStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(submissions));
+
+        // Sync to local recipes list for general dashboard display
+        const storedRecipes = await AsyncStorage.getItem(RECIPES_KEY);
+        const recipes = storedRecipes ? JSON.parse(storedRecipes) : [];
+        const rIdx = recipes.findIndex(r => r.recipeId === draftId || r.id === draftId);
+        if (rIdx > -1) {
+          recipes[rIdx] = serverSub;
+        } else {
+          recipes.unshift(serverSub);
+        }
+        await AsyncStorage.setItem(RECIPES_KEY, JSON.stringify(recipes));
+
+        return serverSub;
+      }
+      throw new Error('Invalid response structure');
     } catch (e) {
       console.error('Error submitting recipe curation', e);
-      return null;
+      throw e;
     }
   },
 
   async getSubmissionsList() {
     try {
+      if (offlineService.isConnected()) {
+        try {
+          const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/submissions`);
+          if (response.ok) {
+            const resJson = await response.json();
+            if (resJson.success && Array.isArray(resJson.data)) {
+              await AsyncStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(resJson.data));
+              return resJson.data;
+            }
+          }
+        } catch (syncErr) {
+          console.warn('Backend fetch failed during getSubmissionsList, falling back to local cache', syncErr);
+        }
+      }
       const stored = await AsyncStorage.getItem(SUBMISSIONS_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (e) {
       console.error('Error fetching recipe submissions list', e);
       return [];
+    }
+  },
+
+  async getSubmissionById(submissionId) {
+    try {
+      if (offlineService.isConnected()) {
+        try {
+          const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/submissions/${submissionId}`);
+          if (response.ok) {
+            const resJson = await response.json();
+            if (resJson.success && resJson.data) {
+              return resJson.data;
+            }
+          }
+        } catch (syncErr) {
+          console.warn('Backend fetch failed during getSubmissionById', syncErr);
+        }
+      }
+      const list = await this.getSubmissionsList();
+      return list.find(s => s.submissionId === submissionId) || null;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  },
+
+  async withdrawSubmission(submissionId) {
+    try {
+      if (!offlineService.isConnected()) {
+        throw new Error('Connect to the internet to withdraw submission.');
+      }
+      const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/submissions/${submissionId}/withdraw`, {
+        method: 'POST'
+      });
+      if (!response.ok) {
+        const resErr = await response.json();
+        throw new Error(resErr.message || 'Withdrawal failed');
+      }
+      const resJson = await response.json();
+      if (resJson.success && resJson.data) {
+        const list = await this.getSubmissionsList();
+        const idx = list.findIndex(s => s.submissionId === submissionId);
+        if (idx > -1) {
+          list[idx] = resJson.data;
+          await AsyncStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(list));
+        }
+        return resJson.data;
+      }
+      throw new Error('Invalid response structure');
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  },
+
+  async resubmitSubmission(submissionId, draftData, declaration, consent, aiDisclosureConfirmed) {
+    try {
+      if (!offlineService.isConnected()) {
+        throw new Error('Connect to the internet to resubmit.');
+      }
+      const draftVersion = draftData.version || 1;
+      const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/submissions/${submissionId}/resubmit`, {
+        method: 'POST',
+        body: JSON.stringify({
+          draftVersion,
+          declaration,
+          consent,
+          aiDisclosureConfirmed
+        })
+      });
+      if (!response.ok) {
+        const resErr = await response.json();
+        throw new Error(resErr.message || 'Resubmission failed');
+      }
+      const resJson = await response.json();
+      if (resJson.success && resJson.data) {
+        const list = await this.getSubmissionsList();
+        const idx = list.findIndex(s => s.submissionId === submissionId);
+        if (idx > -1) {
+          list[idx] = resJson.data;
+          await AsyncStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(list));
+        }
+        return resJson.data;
+      }
+      throw new Error('Invalid response');
+    } catch (e) {
+      console.error(e);
+      throw e;
     }
   },
 
@@ -247,7 +469,7 @@ export const recipeApiService = {
       const recipes = await this.getRecipesList();
       const index = recipes.findIndex(r => r.recipeId === recipeId || r.id === recipeId);
       if (index === -1) return null;
-      
+
       const updated = {
         ...recipes[index],
         status,
@@ -282,7 +504,213 @@ export const recipeApiService = {
       console.error('Error loading all recipes list', e);
       return [];
     }
+  },
+
+  async initiateUpload(assetType, originalFileName, mimeType, size, draftId) {
+    try {
+      const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/media/uploads/initiate`, {
+        method: 'POST',
+        body: JSON.stringify({ assetType, originalFileName, mimeType, size, draftId })
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || 'Initiation failed');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('Error initiating media upload', e);
+      throw e;
+    }
+  },
+
+  async uploadFile(uploadUrl, method, fields, fileUri, fileType, fileName, onProgress) {
+    return new Promise((resolve, reject) => {
+      const isMock = fileUri && !fileUri.startsWith('/') && !fileUri.startsWith('file:') && !fileUri.startsWith('content:');
+      if (isMock) {
+        if (onProgress) {
+          onProgress(50);
+          setTimeout(() => onProgress(100), 100);
+        }
+        setTimeout(() => {
+          resolve({ success: true, message: 'Mock asset upload simulated successfully.' });
+        }, 200);
+        return;
+      }
+
+       const xhr = new XMLHttpRequest();
+      const url = uploadUrl.startsWith('http') ? uploadUrl : `${API_BASE_URL}${uploadUrl}`;
+      xhr.open(method || 'POST', url);
+      xhr.timeout = 25000; // 25s timeout
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable && onProgress) {
+          const progress = Math.round((event.loaded / event.total) * 100);
+          onProgress(progress);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const res = JSON.parse(xhr.responseText);
+            resolve(res);
+          } catch (e) {
+            resolve(xhr.responseText);
+          }
+        } else {
+          reject(new Error(`Upload failed with status: ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Network upload error'));
+      xhr.ontimeout = () => reject(new Error('Upload request timed out'));
+
+      const formData = new FormData();
+      if (fields) {
+        Object.keys(fields).forEach((key) => {
+          formData.append(key, fields[key]);
+        });
+      }
+      formData.append('file', {
+        uri: fileUri,
+        type: fileType || 'image/jpeg',
+        name: fileName || 'file.jpg'
+      });
+
+      xhr.send(formData);
+    });
+  },
+
+  async completeUpload(assetId) {
+    try {
+      const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/media/uploads/${assetId}/complete`, {
+        method: 'POST'
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || 'Completion failed');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('Error completing media upload', e);
+      throw e;
+    }
+  },
+
+  async deleteMediaAsset(assetId) {
+    try {
+      const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/media/${assetId}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || 'Deletion failed');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('Error deleting media asset', e);
+      throw e;
+    }
+  },
+
+  async register(fullName, email, mobile, password) {
+    try {
+      const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/auth/register`, {
+        method: 'POST',
+        body: JSON.stringify({ fullName, email, mobile, password, termsAccepted: true })
+      });
+      if (!response.ok) {
+        let errJson = {};
+        try {
+          errJson = await response.json();
+        } catch (_) {}
+        throw new Error(errJson.message || 'Registration failed');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('Registration failed', e);
+      throw normalizeAuthError(e, 'Registration failed');
+    }
+  },
+
+  async verifyEmail(verificationId, otp) {
+    try {
+      const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/auth/verify-email`, {
+        method: 'POST',
+        body: JSON.stringify({ verificationId, otp })
+      });
+      if (!response.ok) {
+        let errJson = {};
+        try {
+          errJson = await response.json();
+        } catch (_) {}
+        throw new Error(errJson.message || 'Verification failed');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('Verification failed', e);
+      throw normalizeAuthError(e, 'Verification failed');
+    }
+  },
+
+  async resendVerification(email) {
+    try {
+      const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/auth/resend-verification`, {
+        method: 'POST',
+        body: JSON.stringify({ email })
+      });
+      if (!response.ok) {
+        let errJson = {};
+        try {
+          errJson = await response.json();
+        } catch (_) {}
+        throw new Error(errJson.message || 'Resend failed');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('Resend verification failed', e);
+      throw normalizeAuthError(e, 'Resend failed');
+    }
   }
 };
+
+function normalizeAuthError(e, defaultMsg) {
+  const errorObj = new Error(defaultMsg);
+  errorObj.code = 'SERVER_ERROR';
+  errorObj.status = null;
+
+  if (!e) return errorObj;
+
+  const msg = String(e.message || '');
+  if (msg.includes('Network request failed') || msg.includes('NetworkError') || msg.includes('Failed to fetch')) {
+    errorObj.code = 'NETWORK_UNREACHABLE';
+    errorObj.message = 'Unable to connect to the server. Check your connection and try again.';
+  } else if (msg.includes('timeout') || msg.includes('AbortSignal')) {
+    errorObj.code = 'REQUEST_TIMEOUT';
+    errorObj.message = 'The request timed out. Please try again.';
+  } else if (msg.includes('400') || msg.includes('Validation') || msg.includes('required')) {
+    errorObj.code = 'INVALID_INPUT';
+    errorObj.message = e.message;
+  } else if (msg.includes('409') || msg.includes('already registered') || msg.includes('exists') || msg.includes('duplicate')) {
+    errorObj.code = 'ACCOUNT_EXISTS';
+    errorObj.message = e.message;
+  } else if (msg.includes('unverified') || msg.includes('verify')) {
+    errorObj.code = 'ACCOUNT_UNVERIFIED';
+    errorObj.message = e.message;
+  } else if (msg.includes('credentials') || msg.includes('password') || msg.includes('401')) {
+    errorObj.code = 'INVALID_CREDENTIALS';
+    errorObj.message = e.message;
+  } else if (msg.includes('expired')) {
+    errorObj.code = 'VERIFICATION_EXPIRED';
+    errorObj.message = e.message;
+  } else if (msg.includes('too many') || msg.includes('429')) {
+    errorObj.code = 'TOO_MANY_ATTEMPTS';
+    errorObj.message = e.message;
+  } else {
+    errorObj.message = e.message || defaultMsg;
+  }
+
+  return errorObj;
+}
 
 export default recipeApiService;

@@ -7,6 +7,7 @@ import Header from '../../../shared/components/Header';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import TransitionView from '../../../shared/components/TransitionView';
+import { recipeApiService } from '../services/recipeApiService';
 
 export const RecipeMediaUploadScreen = ({ navigation }) => {
   const { recipeDraft, saveRecipeDraft } = useAuth();
@@ -26,6 +27,81 @@ export const RecipeMediaUploadScreen = ({ navigation }) => {
   // Timers Refs
   const recordingIntervalRef = React.useRef(null);
   const playbackIntervalRef = React.useRef(null);
+
+  const uploadImageAsset = async (imageItem) => {
+    try {
+      const initRes = await recipeApiService.initiateUpload(
+        'recipe_gallery',
+        imageItem.fileName,
+        imageItem.type,
+        imageItem.fileSize,
+        recipeDraft ? recipeDraft.draftId : null
+      );
+
+      const { asset, uploadInstructions } = initRes.data;
+      const assetId = asset.assetId;
+
+      await recipeApiService.uploadFile(
+        uploadInstructions.uploadUrl,
+        uploadInstructions.uploadMethod,
+        uploadInstructions.fields,
+        imageItem.uri,
+        imageItem.type,
+        imageItem.fileName,
+        (progress) => {
+          setImages(prev => prev.map(img => img.id === imageItem.id ? { ...img, progress } : img));
+        }
+      );
+
+      await recipeApiService.completeUpload(assetId);
+
+      setImages(prev => prev.map(img => img.id === imageItem.id ? {
+        ...img,
+        progress: 100,
+        uploaded: true,
+        assetId: assetId
+      } : img));
+    } catch (err) {
+      console.error('Failed to upload image asset', err);
+      setImages(prev => prev.map(img => img.id === imageItem.id ? { ...img, progress: 0, uploaded: false, error: true } : img));
+      Alert.alert('Upload Error', `Failed to upload ${imageItem.fileName}. You can retry or continue offline.`);
+    }
+  };
+
+  const uploadAudioCallback = async (audioItem) => {
+    try {
+      const initRes = await recipeApiService.initiateUpload(
+        'oral_history',
+        audioItem.fileName,
+        audioItem.type,
+        2 * 1024 * 1024,
+        recipeDraft ? recipeDraft.draftId : null
+      );
+
+      const { asset, uploadInstructions } = initRes.data;
+      const assetId = asset.assetId;
+
+      await recipeApiService.uploadFile(
+        uploadInstructions.uploadUrl,
+        uploadInstructions.uploadMethod,
+        uploadInstructions.fields,
+        audioItem.uri,
+        audioItem.type,
+        audioItem.fileName
+      );
+
+      await recipeApiService.completeUpload(assetId);
+
+      setOralHistoryAudio({
+        ...audioItem,
+        uploaded: true,
+        assetId: assetId
+      });
+    } catch (err) {
+      console.error('Failed to upload oral history audio', err);
+      Alert.alert('Upload Error', 'Failed to upload audio narration. Please check connection and try again.');
+    }
+  };
 
   useEffect(() => {
     if (recipeDraft && !isHydrated) {
@@ -116,6 +192,7 @@ export const RecipeMediaUploadScreen = ({ navigation }) => {
             };
             setAudioUri('oral_history_narration.mp4');
             setOralHistoryAudio(finishedAudio);
+            uploadAudioCallback(finishedAudio);
             Alert.alert('Recording Limit', 'Maximum duration of 2 minutes reached.');
             return prev;
           }
@@ -154,6 +231,7 @@ export const RecipeMediaUploadScreen = ({ navigation }) => {
           };
           setAudioUri('oral_history_narration.mp4');
           setOralHistoryAudio(finishedAudio);
+          uploadAudioCallback(finishedAudio);
           return prev;
         }
         return prev + 1;
@@ -177,6 +255,7 @@ export const RecipeMediaUploadScreen = ({ navigation }) => {
     };
     setAudioUri('oral_history_narration.mp4');
     setOralHistoryAudio(finishedAudio);
+    uploadAudioCallback(finishedAudio);
   };
 
   const startPlayback = () => {
@@ -321,10 +400,11 @@ export const RecipeMediaUploadScreen = ({ navigation }) => {
           name: picked.fileName || `image_${newId}.jpg`,
           type: picked.type || 'image/jpeg',
           fileSize: picked.fileSize || Math.round(sizeInMb * 1024 * 1024),
-          progress: 100,
+          progress: 0,
           uploaded: false
         };
         setImages(prev => [...prev, newImg]);
+        uploadImageAsset(newImg);
       };
 
       if (mode === 'camera') {
@@ -362,15 +442,7 @@ export const RecipeMediaUploadScreen = ({ navigation }) => {
       };
       
       setImages(prev => [...prev, newImg]);
-
-      let p = 0;
-      const interval = setInterval(() => {
-        p += 25;
-        setImages(prev => prev.map(img => img.id === newId ? { ...img, progress: p } : img));
-        if (p >= 100) {
-          clearInterval(interval);
-        }
-      }, 1500 / 4);
+      uploadImageAsset(newImg);
     }
   };
 

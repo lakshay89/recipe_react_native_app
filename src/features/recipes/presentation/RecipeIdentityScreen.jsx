@@ -10,9 +10,11 @@ import recentCacheService from '../../../core/services/recentCacheService';
 import RecipeNameAutocomplete from './components/RecipeNameAutocomplete';
 import { normalizeRecipeName, addCustomRecipeName } from '../services/recipeNameService';
 import TransitionView from '../../../shared/components/TransitionView';
+import useNavigationGuard from '../../../shared/hooks/useNavigationGuard';
 
 export const RecipeIdentityScreen = ({ navigation }) => {
   const { recipeDraft, saveRecipeDraft } = useAuth();
+  useNavigationGuard(navigation);
   
   const [title, setTitle] = useState('');
   const [localName, setLocalName] = useState('');

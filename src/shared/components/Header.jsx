@@ -15,7 +15,7 @@ export const Header = ({
   rightComponent,
 }) => {
   const navigation = useNavigation();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, savingState } = useAuth();
   const isConnected = useConnectionStatus();
   const insets = useSafeAreaInsets();
 
@@ -65,6 +65,11 @@ export const Header = ({
           <Text style={styles.headerTitle} numberOfLines={1}>
             {title}
           </Text>
+          {savingState && (
+            <Text style={[styles.savingStateText, getSavingStateStyle(savingState)]}>
+              {getSavingStateLabel(savingState)}
+            </Text>
+          )}
         </View>
 
         <View style={styles.rightContainer}>
@@ -208,6 +213,37 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
+  savingStateText: {
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 2,
+  },
 });
+
+const getSavingStateLabel = (state) => {
+  switch (state) {
+    case 'Unsaved': return '● Unsaved changes';
+    case 'SavingLocally': return 'Saving locally...';
+    case 'Syncing': return 'Syncing with server...';
+    case 'Saved': return '✓ Saved to server';
+    case 'SavedLocallyWaiting': return '✓ Saved locally (offline)';
+    case 'SyncFailed': return '⚠ Sync failed';
+    case 'Conflict': return '⚠ Conflict detected';
+    default: return '';
+  }
+};
+
+const getSavingStateStyle = (state) => {
+  switch (state) {
+    case 'Unsaved': return { color: '#E06C75' };
+    case 'SavingLocally': return { color: '#D19A66' };
+    case 'Syncing': return { color: '#61AFEF' };
+    case 'Saved': return { color: '#98C379' };
+    case 'SavedLocallyWaiting': return { color: '#98C379' };
+    case 'SyncFailed': return { color: '#E06C75' };
+    case 'Conflict': return { color: '#E5C07B' };
+    default: return { color: '#98C379' };
+  }
+};
 
 export default Header;
