@@ -219,7 +219,7 @@ export const RecipePreviewScreen = ({ navigation }) => {
         declaration,
         consent,
         aiDisclosureConfirmed,
-        `idemp-${recipeDraft.draftId || Date.now()}-${Date.now()}`
+        `idemp-${recipeDraft.draftId || 'fresh'}-${recipeDraft.version || 1}`
       );
 
       if (newRecipe) {

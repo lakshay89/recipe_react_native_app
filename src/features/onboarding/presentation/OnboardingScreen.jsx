@@ -22,20 +22,20 @@ const SLIDES = [
     color: COLORS.primary,
     artworkImage: require('../../../assets/images/silbata.png'),
   },
-  {
-    title: 'Explore Forgotten Heritage',
-    tagline: 'Explore',
-    description: 'Reclaim and restore recipes that are slowly fading from public memory, utilizing traditional cooking styles.',
-    color: COLORS.gold,
-    artworkImage: require('../../../assets/images/kelapatta.png'),
-  },
-  {
-    title: 'Contribute to Edible India',
-    tagline: 'Contribute',
-    description: 'Participate in India\'s living food archive. Upload details and pin recipes to build our collective culinary map.',
-    color: COLORS.accent,
-    artworkImage: require('../../../assets/images/kesar.png'),
-  },
+  // {
+  //   title: 'Explore Forgotten Heritage',
+  //   tagline: 'Explore',
+  //   description: 'Reclaim and restore recipes that are slowly fading from public memory, utilizing traditional cooking styles.',
+  //   color: COLORS.gold,
+  //   artworkImage: require('../../../assets/images/kelapatta.png'),
+  // },
+  // {
+  //   title: 'Contribute to Edible India',
+  //   tagline: 'Contribute',
+  //   description: 'Participate in India\'s living food archive. Upload details and pin recipes to build our collective culinary map.',
+  //   color: COLORS.accent,
+  //   artworkImage: require('../../../assets/images/kesar.png'),
+  // },
 ];
 
 export const OnboardingScreen = ({ navigation }) => {

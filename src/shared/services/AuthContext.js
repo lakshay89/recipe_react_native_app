@@ -6,6 +6,7 @@ import { recipeApiService } from '../../features/recipes/services/recipeApiServi
 import { offlineService } from './offlineService';
 import { API_BASE_URL } from '../../core/config/apiConfig';
 import { tokenStorage, apiClient } from './apiClient';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { AppState } from 'react-native';
 
 export const AuthContext = createContext({});
@@ -300,11 +301,113 @@ export const AuthProvider = ({ children }) => {
     } catch (e) {
       console.warn('Logout api cleanup failed', e);
     } finally {
+      try {
+        await GoogleSignin.signOut();
+      } catch (googleSignOutErr) {
+        console.warn('Google signout failed or not configured', googleSignOutErr);
+      }
       setIsAuthenticated(false);
       setUser(null);
       await tokenStorage.clearTokens();
       await AsyncStorage.removeItem('@edible_india_authenticated');
       await AsyncStorage.removeItem('@edible_india_user');
+    }
+  };
+
+  // Action: Google Login
+  const loginWithGoogle = async (idToken) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken })
+      });
+
+      if (!response.ok) {
+        const resErr = await response.json();
+        throw new Error(resErr.message || 'Google login failed');
+      }
+
+      const resJson = await response.json();
+      if (resJson.success && resJson.data) {
+        const { user: backendUser, tokens } = resJson.data;
+        setUser(backendUser);
+        setIsAuthenticated(true);
+        await tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
+        await AsyncStorage.setItem('@edible_india_authenticated', 'true');
+        await AsyncStorage.setItem('@edible_india_user', JSON.stringify(backendUser));
+
+        // Guest drafts migration trigger
+        const drafts = await recipeDraftService.getAllDrafts();
+        if (drafts.length > 0) {
+          try {
+            await fetch(`${API_BASE_URL}/api/v1/recipes/drafts/migrate`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${tokens.accessToken}`
+              },
+              body: JSON.stringify(drafts)
+            });
+          } catch (migrateErr) {
+            console.warn('Guest drafts migration failed during Google login', migrateErr);
+          }
+        }
+
+        return backendUser;
+      }
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  };
+
+  // Action: Link Google Account
+  const linkGoogleAccount = async (idToken) => {
+    try {
+      const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/auth/google/link`, {
+        method: 'POST',
+        body: JSON.stringify({ idToken })
+      });
+
+      if (!response.ok) {
+        const resErr = await response.json();
+        throw new Error(resErr.message || 'Linking Google account failed');
+      }
+
+      const resJson = await response.json();
+      if (resJson.success && resJson.data) {
+        setUser(resJson.data);
+        await AsyncStorage.setItem('@edible_india_user', JSON.stringify(resJson.data));
+        return resJson.data;
+      }
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  };
+
+  // Action: Unlink Google Account
+  const unlinkGoogleAccount = async () => {
+    try {
+      const response = await apiClient.fetch(`${API_BASE_URL}/api/v1/auth/google/unlink`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        const resErr = await response.json();
+        throw new Error(resErr.message || 'Unlinking Google account failed');
+      }
+
+      const resJson = await response.json();
+      if (resJson.success && resJson.data) {
+        setUser(resJson.data);
+        await AsyncStorage.setItem('@edible_india_user', JSON.stringify(resJson.data));
+        return resJson.data;
+      }
+    } catch (e) {
+      console.error(e);
+      throw e;
     }
   };
 
@@ -797,6 +900,9 @@ export const AuthProvider = ({ children }) => {
         registerUser,
         completeProfileSetup,
         logout,
+        loginWithGoogle,
+        linkGoogleAccount,
+        unlinkGoogleAccount,
         addRecipe,
         editRecipe,
         duplicateRecipe,

@@ -8,14 +8,32 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
+import { useAuth } from '../../../shared/services/AuthContext';
+
 const SplashScreen = ({ navigation }) => {
+  const { isAuthenticated, user, hasCompletedOnboarding, selectedLanguage } = useAuth();
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigation.replace('Language');
-    }, 3000);
+      if (isAuthenticated && user) {
+        if (user.isProfileComplete) {
+          navigation.replace('MainApp');
+        } else {
+          navigation.replace('ProfileSetup');
+        }
+      } else {
+        if (!selectedLanguage) {
+          navigation.replace('Language');
+        } else if (!hasCompletedOnboarding) {
+          navigation.replace('Onboarding');
+        } else {
+          navigation.replace('Auth');
+        }
+      }
+    }, 2000);
 
     return () => clearTimeout(timer);
-  }, [navigation]);
+  }, [navigation, isAuthenticated, user, hasCompletedOnboarding, selectedLanguage]);
 
   return (
     <>

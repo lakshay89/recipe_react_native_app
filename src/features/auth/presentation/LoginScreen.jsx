@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, StatusBar, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -9,6 +9,7 @@ import Input from '../../../shared/components/Input';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import { recipeApiService } from '../../recipes/services/recipeApiService';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 const GoogleIcon = () => (
   <Svg width="18" height="18" viewBox="0 0 24 24" style={{ marginRight: 10 }}>
@@ -38,9 +39,49 @@ const AppleIcon = () => (
 );
 
 export const LoginScreen = ({ navigation }) => {
-  const { login, registerUser } = useAuth();
+  const { login, registerUser, loginWithGoogle } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: '654643216698-ht9c5v3noi88qjsui9tike6en01s7dsn.apps.googleusercontent.com',
+      offlineAccess: true,
+    });
+  }, []);
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = userInfo.data?.idToken || userInfo.idToken;
+      
+      if (!idToken) {
+        throw new Error('Google Sign-In returned an empty ID token.');
+      }
+
+      const loggedUser = await loginWithGoogle(idToken);
+      setIsLoading(false);
+
+      if (loggedUser && loggedUser.isProfileComplete) {
+        navigation.replace('MainApp');
+      } else {
+        navigation.replace('ProfileSetup');
+      }
+    } catch (error) {
+      setIsLoading(false);
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        Alert.alert('Cancelled', 'Google Sign-In was cancelled.');
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        Alert.alert('In Progress', 'Google Sign-In is already in progress.');
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Play Services Unavailable', 'Google Play Services are not available on this device.');
+      } else {
+        Alert.alert('Sign-In Error', error.message || 'An error occurred during Google Sign-In.');
+      }
+    }
+  };
 
   // Login Form States
   const [loginIdentifier, setLoginIdentifier] = useState('');
@@ -340,7 +381,7 @@ export const LoginScreen = ({ navigation }) => {
           <View style={styles.socialContainer}>
             <TouchableOpacity
               style={styles.googleBtn}
-              onPress={() => navigation.navigate('MainApp')}
+              onPress={handleGoogleLogin}
               activeOpacity={0.85}
             >
               <GoogleIcon />

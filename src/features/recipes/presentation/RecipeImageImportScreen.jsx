@@ -24,7 +24,8 @@ import {
   Eye,
   Check,
   AlertCircle,
-  HelpCircle
+  HelpCircle,
+  X
 } from 'lucide-react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { COLORS, FONTS, SPACING, BORDERS, SHADOWS } from '../../../core/theme/theme';
@@ -43,6 +44,7 @@ export const RecipeImageImportScreen = ({ navigation }) => {
   const [previewPage, setPreviewPage] = useState(null); // page to show in full preview modal
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
 
   const isMounted = useRef(true);
   useEffect(() => {
@@ -526,6 +528,13 @@ export const RecipeImageImportScreen = ({ navigation }) => {
               <Text style={styles.guideItem}>• Hold device steady so handwriting is completely legible.</Text>
               <Text style={styles.guideItem}>• Scan multi-page cookbooks sequentially, page by page.</Text>
             </View>
+            <TouchableOpacity 
+              style={styles.templateBtn} 
+              onPress={() => setShowTemplateModal(true)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.templateBtnText}>View Recommended Recipe Format & Fields</Text>
+            </TouchableOpacity>
           </Card>
 
           {/* Source Triggers Card */}
@@ -665,6 +674,43 @@ export const RecipeImageImportScreen = ({ navigation }) => {
           </View>
         </Modal>
       )}
+
+      {/* Recommended Format Guideline Modal */}
+      <Modal
+        visible={showTemplateModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowTemplateModal(false)}
+      >
+        <View style={styles.guidelineOverlay}>
+          <View style={styles.guidelineContent}>
+            <View style={styles.guidelineHeader}>
+              <Text style={styles.guidelineTitle}>Recommended Recipe Card Format</Text>
+              <TouchableOpacity onPress={() => setShowTemplateModal(false)} style={styles.guidelineCloseBtn}>
+                <X size={20} color={COLORS.secondary} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView contentContainerStyle={styles.guidelineScroll} showsVerticalScrollIndicator={false}>
+              <Text style={styles.guidelineSub}>
+                To help the AI extract details perfectly, we recommend writing down information in this format on your page before scanning:
+              </Text>
+              <Image 
+                source={require('../../../assets/images/recipe_template_guideline.png')} 
+                style={styles.templateImage} 
+                resizeMode="contain" 
+              />
+              <View style={styles.formatGuidelines}>
+                <Text style={styles.formatHeader}>Key Information to Include:</Text>
+                <Text style={styles.formatText}>• <Text style={{fontWeight: 'bold'}}>Title & Local Name:</Text> e.g. Monsoon Kadhai Dal (Kadhai Paneer)</Text>
+                <Text style={styles.formatText}>• <Text style={{fontWeight: 'bold'}}>Geography/Location:</Text> State, District, Village (e.g. Kerala, Kottayam)</Text>
+                <Text style={styles.formatText}>• <Text style={{fontWeight: 'bold'}}>Heritage & History:</Text> e.g. Passed from Grandmother to Mother to Me</Text>
+                <Text style={styles.formatText}>• <Text style={{fontWeight: 'bold'}}>Ingredients & Quantities:</Text> Clear lists with units (e.g. 250g Paneer)</Text>
+                <Text style={styles.formatText}>• <Text style={{fontWeight: 'bold'}}>Step-by-step Steps:</Text> Sequential cooking instructions</Text>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -932,6 +978,96 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     backgroundColor: '#2F2B28',
+  },
+  templateBtn: {
+    marginTop: SPACING.sm,
+    backgroundColor: '#F5E6D3',
+    paddingVertical: 10,
+    paddingHorizontal: SPACING.md,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 0.5,
+    borderColor: '#E2C7A8',
+  },
+  templateBtnText: {
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif' }),
+    fontSize: 12,
+    color: COLORS.primary,
+    fontWeight: '700',
+  },
+  guidelineOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  guidelineContent: {
+    width: '90%',
+    maxHeight: '85%',
+    backgroundColor: '#FBF7F1',
+    borderRadius: 16,
+    padding: SPACING.md,
+    ...SHADOWS.md,
+    borderWidth: 1,
+    borderColor: '#ECE3D7',
+  },
+  guidelineHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEDCC5',
+    paddingBottom: SPACING.sm,
+  },
+  guidelineTitle: {
+    ...FONTS.bodyBold,
+    fontSize: 14,
+    color: COLORS.secondary,
+  },
+  guidelineCloseBtn: {
+    padding: 4,
+  },
+  guidelineScroll: {
+    alignItems: 'center',
+    paddingBottom: SPACING.md,
+  },
+  guidelineSub: {
+    ...FONTS.caption,
+    fontSize: 11.5,
+    color: COLORS.textMuted,
+    textAlign: 'center',
+    marginBottom: SPACING.md,
+  },
+  templateImage: {
+    width: '100%',
+    height: 280,
+    backgroundColor: '#FAF5EE',
+    borderRadius: 10,
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: '#EEDCC5',
+  },
+  formatGuidelines: {
+    width: '100%',
+    backgroundColor: '#FAF0E6',
+    borderRadius: 10,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: '#EEDCC5',
+  },
+  formatHeader: {
+    ...FONTS.bodyBold,
+    fontSize: 13,
+    color: COLORS.secondary,
+    marginBottom: SPACING.xs,
+  },
+  formatText: {
+    ...FONTS.caption,
+    fontSize: 11,
+    color: COLORS.text,
+    marginBottom: 5,
+    lineHeight: 15,
   }
 });
 

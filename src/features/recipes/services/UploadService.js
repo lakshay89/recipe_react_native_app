@@ -153,7 +153,7 @@ export class UploadService {
   }
 
   performXhrUpload(taskId, uploadUrl, method, fields, fileUri, fileType, fileName, onProgress) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const xhr = new XMLHttpRequest();
       this.activeRequests.set(taskId, xhr);
 
@@ -187,13 +187,15 @@ export class UploadService {
       };
 
       if (method === 'PUT') {
-        // Direct binary PUT upload to R2
-        xhr.setRequestHeader('Content-Type', fileType);
-        xhr.send({
-          uri: fileUri,
-          type: fileType,
-          name: fileName
-        });
+        try {
+          const fileResponse = await fetch(fileUri);
+          const blob = await fileResponse.blob();
+          xhr.setRequestHeader('Content-Type', fileType);
+          xhr.send(blob);
+        } catch (err) {
+          this.activeRequests.delete(taskId);
+          reject(new Error(`Failed to read file: ${err.message}`));
+        }
       } else {
         // Multipart POST upload to local
         const formData = new FormData();

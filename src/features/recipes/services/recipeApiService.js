@@ -524,20 +524,21 @@ export const recipeApiService = {
   },
 
   async uploadFile(uploadUrl, method, fields, fileUri, fileType, fileName, onProgress) {
-    return new Promise((resolve, reject) => {
-      const isMock = fileUri && !fileUri.startsWith('/') && !fileUri.startsWith('file:') && !fileUri.startsWith('content:');
-      if (isMock) {
-        if (onProgress) {
-          onProgress(50);
-          setTimeout(() => onProgress(100), 100);
-        }
+    const isMock = fileUri && !fileUri.startsWith('/') && !fileUri.startsWith('file:') && !fileUri.startsWith('content:');
+    if (isMock) {
+      if (onProgress) {
+        onProgress(50);
+        setTimeout(() => onProgress(100), 100);
+      }
+      return new Promise((resolve) => {
         setTimeout(() => {
           resolve({ success: true, message: 'Mock asset upload simulated successfully.' });
         }, 200);
-        return;
-      }
+      });
+    }
 
-       const xhr = new XMLHttpRequest();
+    return new Promise(async (resolve, reject) => {
+      const xhr = new XMLHttpRequest();
       const url = uploadUrl.startsWith('http') ? uploadUrl : `${API_BASE_URL}${uploadUrl}`;
       xhr.open(method || 'POST', url);
       xhr.timeout = 25000; // 25s timeout
@@ -565,19 +566,30 @@ export const recipeApiService = {
       xhr.onerror = () => reject(new Error('Network upload error'));
       xhr.ontimeout = () => reject(new Error('Upload request timed out'));
 
-      const formData = new FormData();
-      if (fields) {
-        Object.keys(fields).forEach((key) => {
-          formData.append(key, fields[key]);
+      if (method === 'PUT') {
+        try {
+          const fileResponse = await fetch(fileUri);
+          const blob = await fileResponse.blob();
+          xhr.setRequestHeader('Content-Type', fileType || 'image/jpeg');
+          xhr.send(blob);
+        } catch (err) {
+          reject(new Error(`Failed to read file for PUT upload: ${err.message}`));
+        }
+      } else {
+        const formData = new FormData();
+        if (fields) {
+          Object.keys(fields).forEach((key) => {
+            formData.append(key, fields[key]);
+          });
+        }
+        formData.append('file', {
+          uri: fileUri,
+          type: fileType || 'image/jpeg',
+          name: fileName || 'file.jpg'
         });
-      }
-      formData.append('file', {
-        uri: fileUri,
-        type: fileType || 'image/jpeg',
-        name: fileName || 'file.jpg'
-      });
 
-      xhr.send(formData);
+        xhr.send(formData);
+      }
     });
   },
 
