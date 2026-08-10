@@ -1,0 +1,34 @@
+{
+  "project_info": {
+    "project_number": "654643216698",
+    "project_id": "edible-india-65464",
+    "storage_bucket": "edible-india-65464.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:654643216698:android:1a2b3c4d5e6f7g8h",
+        "android_client_info": {
+          "package_name": "com.edibleindia.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "654643216698-ht9c5v3noi88qjsui9tike6en01s7dsn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDummyKeyForGoogleSignInServices_123"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
